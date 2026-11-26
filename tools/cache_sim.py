@@ -15,6 +15,16 @@ reports the share of tokens that sit in a prefix identical to the previous
 request, i.e. the best-case cacheable share. It is a teaching aid: real
 providers add minimum sizes, time-to-live limits and block granularity, which
 you should read in their documentation.
+
+WORKED EXAMPLE
+--------------
+    $ python tools/cache_sim.py
+    stable-first order : 97% of tokens cacheable
+    timestamp-first    : 0% of tokens cacheable
+
+Why 97%: each prompt is rules(800) + tools(1200) + docs(3000) + question(150).
+The first 5,000 tokens repeat exactly, so 5000/5150 = 97%. A timestamp in front
+changes the very first segment, so nothing after it can be reused.
 """
 from __future__ import annotations
 
@@ -24,6 +34,7 @@ import sys
 def common_prefix_tokens(prev: list[tuple[str, int]], cur: list[tuple[str, int]]) -> int:
     """Tokens in the longest identical leading run of (text, tokens) segments."""
     total = 0
+    # zip pairs segment i of the previous prompt with segment i of the current one.
     for (pt, _), (ct, cn) in zip(prev, cur):
         if pt != ct:
             break  # first difference: the cache stops matching here

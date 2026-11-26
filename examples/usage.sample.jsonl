@@ -1,0 +1,4 @@
+{"task":"weekly digest","model":"mid","input":5200,"output":410,"cached":0}
+{"task":"weekly digest","model":"mid","input":5100,"output":380,"cached":0}
+{"task":"translate","model":"small","input":900,"output":700,"cached":600}
+{"task":"support triage","model":"mid","input":2500,"output":150,"cached":2000}

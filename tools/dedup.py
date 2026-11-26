@@ -13,6 +13,15 @@ METHOD: word shingles + Jaccard similarity
 3. Jaccard similarity of two shingle sets = |A & B| / |A | B|.
    1.0 means identical, 0.0 means nothing in common.
 Pairs above a threshold (default 0.6) are reported.
+
+WORKED EXAMPLE
+--------------
+    $ python tools/dedup.py wiki/ --threshold 0.6
+    0.912  wiki/pricing.md  <->  wiki/prices-old.md
+    1 near-duplicate pair(s) among 48 page(s)
+
+Tip: the exit code is 1 when pairs are found, so it works as a CI gate.
+Lower --threshold (0.4) to find looser overlaps; raise -k to be stricter.
 """
 from __future__ import annotations
 
@@ -25,6 +34,7 @@ import sys
 
 def shingles(text: str, k: int = 4) -> set[str]:
     """Return the set of k-word windows of the normalised text."""
+    # [a-z0-9']+ drops punctuation and Markdown syntax, so '**Cost**:' and 'cost' match.
     words = re.findall(r"[a-z0-9']+", text.lower())
     if len(words) < k:
         return {" ".join(words)} if words else set()
@@ -35,11 +45,13 @@ def jaccard(a: set[str], b: set[str]) -> float:
     """Jaccard similarity of two sets; defined as 0.0 when both are empty."""
     if not a and not b:
         return 0.0
+    # Intersection over union: 1.0 = identical sets, 0.0 = nothing shared.
     return len(a & b) / len(a | b)
 
 
 def find_duplicates(files: dict[str, str], threshold: float = 0.6, k: int = 4):
     """Return [(score, name_a, name_b)] for every pair at or above threshold, best first."""
+    # Pre-compute each page's shingle set once; comparing sets is then cheap set arithmetic.
     sets = {name: shingles(text, k) for name, text in files.items()}
     pairs = []
     # combinations() gives each unordered pair exactly once: O(n^2), fine for

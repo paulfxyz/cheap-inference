@@ -27,6 +27,17 @@ USAGE
     python tools/tokens.py README.md docs/            # files and folders
     python tools/tokens.py --ext .md,.py src/         # filter by extension
     python tools/tokens.py --json docs/               # machine-readable
+
+WORKED EXAMPLE
+--------------
+    $ python tools/tokens.py templates/AGENTS.md
+    file                      chars   ~tok(c/4)  ~tok(w*1.33)
+    templates/AGENTS.md         892         223           195
+    TOTAL                                   223
+
+How to read it: the file would add roughly 223 tokens to every session that
+loads it. If it is loaded in 300 sessions a month, that is ~67,000 tokens of
+pure overhead before any work happens (budget.py does this multiplication).
 """
 from __future__ import annotations
 
@@ -86,10 +97,11 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("paths", nargs="+", help="files or folders")
     ap.add_argument("--ext", default="", help="comma-separated extensions, e.g. .md,.py")
     ap.add_argument("--json", action="store_true", help="print JSON instead of a table")
-    args = ap.parse_args(argv)
+    args = ap.parse_args(argv)  # argv=None means 'read sys.argv'; tests pass a list instead
 
+    # Normalise user input: accept both 'md' and '.md'; fall back to the default set.
     exts = {e if e.startswith(".") else "." + e for e in args.ext.split(",") if e} or DEFAULT_EXTS
-    rows = []
+    rows = []  # one dict per readable file; reused for both the table and the JSON output
     for f in iter_files(args.paths, exts):
         try:
             text = f.read_text(encoding="utf-8")
@@ -97,6 +109,7 @@ def main(argv: list[str] | None = None) -> int:
             continue  # unreadable or binary: ignore quietly
         rows.append({"file": str(f), **estimate_tokens(text)})
 
+    # The chars/4 figure is the headline number; it is the one the budget tools use too.
     total = sum(r["tokens_by_chars"] for r in rows)
     if args.json:
         print(json.dumps({"files": rows, "total_tokens_by_chars": total}, indent=2))

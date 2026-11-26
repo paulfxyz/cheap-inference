@@ -17,6 +17,16 @@ MODEL
 The script prints both totals and the best K (turns per session) found by
 brute force. It ignores caching on purpose, so you see the worst case;
 caching lowers the price of the repeated part but not its size.
+
+WORKED EXAMPLE
+--------------
+    $ python tools/session_budget.py --turns 60 --per-turn 700
+    one long session : 1,371,000 input tokens
+    best split (K=3) : 244,300 input tokens  (82% fewer)
+
+CAVEAT: a worst-case model. It ignores prompt caching (which makes the repeated
+history cheaper per token, not smaller) and assumes each restart costs 2,500
+tokens to rebuild context. Change --restart and --summary to match your reality.
 """
 from __future__ import annotations
 
@@ -26,6 +36,8 @@ import sys
 
 def long_session(turns: int, per_turn: int, base: int) -> int:
     """Total input tokens when the history is never reset."""
+    # Turn i re-sends the base context plus the i turns of history accumulated so far,
+    # so the total grows quadratically with the number of turns.
     return sum(base + i * per_turn for i in range(1, turns + 1))
 
 
@@ -33,6 +45,8 @@ def split_sessions(turns: int, per_turn: int, base: int, summary: int, k: int, r
     """Total input tokens when the session restarts every k turns with a summary."""
     total = 0
     for i in range(1, turns + 1):
+        # `pos` is the turn's position inside its mini-session (1..k): history only
+        # accumulates since the last restart.
         pos = (i - 1) % k + 1  # position inside the current mini-session
         carry = summary if i > k else 0
         if pos == 1 and i > 1:

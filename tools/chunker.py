@@ -13,6 +13,14 @@ a link to its neighbours, so the result drops straight into a kb.py wiki.
 USAGE
 -----
     python tools/chunker.py big-report.md --out wiki/ --target 800
+
+WORKED EXAMPLE
+--------------
+    $ python tools/chunker.py big-report.md --out wiki/ --target 800
+    wrote 14 page(s) to wiki/
+    # wiki/big-report-01-introduction.md ... each ~800 tokens, with
+    # frontmatter (title, sources, updated) and "Previous / Next" links, so
+    # `kb.py lint` accepts the pages as they are.
 """
 from __future__ import annotations
 
@@ -29,6 +37,8 @@ def tok(s: str) -> int:
 
 def split_sections(text: str) -> list[str]:
     """Split before every heading line (# to ###). Keeps each heading with its body."""
+    # The lookahead (?=...) splits BEFORE each heading without consuming it, so every
+    # heading stays attached to the text that follows it.
     parts = re.split(r"(?m)^(?=#{1,3}\s)", text)
     return [p for p in parts if p.strip()]
 
@@ -52,6 +62,7 @@ def chunk(text: str, target: int = 800) -> list[str]:
     for sec in split_sections(text):
         pieces += split_paragraphs(sec, target) if tok(sec) > target * 1.5 else [sec.strip()]
     # Merge neighbours that are too small to be worth a file.
+    # Pass 2: glue tiny sections to a neighbour so we do not create hundreds of 20-token files.
     merged: list[str] = []
     for p in pieces:
         if merged and tok(merged[-1]) < target * 0.4 and tok(merged[-1] + p) <= target * 1.3:

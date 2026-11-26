@@ -9,6 +9,16 @@ the rule "once a rung has worked for a recurring workflow, treat it as the floor
 
   python tools/ladder_log.py add  --kind weekly-digest --rung 2 --accepted yes
   python tools/ladder_log.py floor --kind weekly-digest
+
+WORKED EXAMPLE
+--------------
+    $ python tools/ladder_log.py add --kind weekly-digest --rung 1 --accepted no     # x3
+    $ python tools/ladder_log.py add --kind weekly-digest --rung 2 --accepted yes    # x3
+    $ python tools/ladder_log.py floor --kind weekly-digest
+    {"kind": "weekly-digest", "floor": 2, "evidence": "3/3 accepted"}
+
+Meaning: rung 1 failed three times, rung 2 worked three times, so rung 2 is the
+new floor for this kind of task. Do not start lower unless the task changes.
 """
 from __future__ import annotations
 
@@ -32,11 +42,13 @@ def floor(rows: list[dict], kind: str, min_samples: int = 3, min_rate: float = 0
 
     Falls back to the highest rung tried when no rung qualifies yet, and says so.
     """
+    # rung -> [accepted_count, total_count]; defaultdict creates the pair on first use.
     stats = collections.defaultdict(lambda: [0, 0])  # rung -> [accepted, total]
     for r in rows:
         if r["kind"] == kind:
             stats[r["rung"]][1] += 1
             stats[r["rung"]][0] += 1 if r["accepted"] else 0
+    # Walk from the cheapest rung upwards; the first one with enough good evidence wins.
     for rung in sorted(stats):
         ok, n = stats[rung]
         if n >= min_samples and ok / n >= min_rate:

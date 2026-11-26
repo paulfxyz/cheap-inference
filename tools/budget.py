@@ -26,6 +26,18 @@ EXIT CODE
 ---------
 0 when everything fits, 2 when anything is over budget. That makes it usable
 as a CI check or a git pre-commit hook.
+
+WORKED EXAMPLE
+--------------
+    $ python tools/budget.py examples/budget.json
+    ok       templates/AGENTS.md        223 / 700
+    ok       templates/hot.md            32 / 250
+    ok       TOTAL                      255 / 1500
+    Loading cost: ~76,500 tokens/month over 300 sessions
+
+How to read it: 255 tokens x 300 sessions = 76,500 tokens per month spent on
+loading alone. Shrinking the guide by 100 tokens saves 30,000 tokens a month
+here, with no change in the quality of any single answer.
 """
 from __future__ import annotations
 
@@ -50,6 +62,7 @@ def audit(budget: dict, base: pathlib.Path) -> dict:
             continue
         tokens = estimate_tokens(path.read_text(encoding="utf-8"))["tokens_by_chars"]
         limit = entry.get("limit_tokens")
+        # Per-file limits catch one bloated file even when the total still fits.
         status = "OVER" if (limit is not None and tokens > limit) else "ok"
         total += tokens
         rows.append({"path": entry["path"], "tokens": tokens, "limit": limit, "status": status})
@@ -83,6 +96,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"{report['total_status']:<8} {'TOTAL':<40} {report['total_tokens']:>7} / {report['total_limit']}")
     print(f"Loading cost: ~{report['monthly_loading_tokens']:,} tokens/month over {report['sessions_per_month']} sessions")
 
+    # Exit code 2 = something is over budget; CI and pre-commit hooks key off this.
     bad = report["total_status"] == "OVER" or any(r["status"] in ("OVER", "MISSING") for r in report["rows"])
     return 2 if bad else 0
 

@@ -19,6 +19,17 @@ USAGE
 -----
     some-command 2>&1 | python tools/compact.py --head 40 --tail 60
     python tools/compact.py build.log --grep "error|warn" --context 2
+
+WORKED EXAMPLE
+--------------
+    $ printf 'build ok\nbuild ok\nbuild ok\nwarn: slow\nerror: boom\n' | python tools/compact.py --head 2 --tail 2
+    build ok  (x3)
+    warn: slow
+    error: boom
+    [compact] 5 -> 3 lines, ~26% fewer characters      (printed on stderr)
+
+On a real 20,000-line log the saving is far larger; the head/tail window keeps
+the start (configuration) and the end (where failures show up).
 """
 from __future__ import annotations
 
@@ -61,13 +72,16 @@ def grep_with_context(lines: list[str], pattern: str, context: int) -> list[str]
 
 def compact(text: str, head: int = 40, tail: int = 60, grep: str | None = None, context: int = 1) -> tuple[str, dict]:
     """Return (compacted_text, stats). Pure function, easy to test."""
+    # Step 1: strip colour codes and trailing spaces so identical lines compare equal.
     raw_lines = [ANSI.sub("", ln).rstrip() for ln in text.splitlines()]
     before = len(raw_lines)
+    # Step 2: 100 identical lines become one line with a count.
     lines = collapse_repeats(raw_lines)
     # drop runs of blank lines down to one
     lines = [ln for i, ln in enumerate(lines) if ln or (i and lines[i - 1])]
     if grep:
         lines = grep_with_context(lines, grep, context)
+    # Step 5: keep both ends (setup at the start, failures at the end) and say what was cut.
     if len(lines) > head + tail:
         omitted = len(lines) - head - tail
         lines = lines[:head] + [f"... [{omitted} lines omitted] ..."] + lines[-tail:]

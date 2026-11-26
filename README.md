@@ -141,6 +141,24 @@ lint: 7 problem(s) in 2 pages
 
 <br>
 
+## How it works: a five-minute walkthrough
+
+Follow one imaginary week to see how the pieces fit. Every number below comes from a tool you can run.
+
+**Monday: measure.** Your project guide is 223 tokens and your hot cache is 32. `budget.py` multiplies that by 300 sessions a month and prints `~76,500 tokens/month` of pure loading. Nothing is wrong yet; you now have a baseline.
+
+**Tuesday: trim.** `prompt_lint.py` flags a date at the top of the guide (it breaks caching), five filler phrases, a repeated rule and an eager `@wiki/index.md` import. You fix all four. The guide shrinks and the first lines become stable, so a provider that supports prompt caching can reuse them.
+
+**Wednesday: stop re-reading.** You point `kb.py` at your notes. `kb.py status` lists only the two files that changed since the last ingest. The model reads those two, writes pages with quote lines, and `kb.py lint` checks every quote word for word. One planted false quote is caught in milliseconds, for 0 tokens.
+
+**Thursday: route.** A bulk job arrives: 400 strings to translate. `router.py --items 400` says rung 4, fan-out. `costcalc.py` (with your own prices) shows the spread between a small model, a batch route and a premium model. You pick the cheap one and add a validator.
+
+**Friday: look at the bill.** You export usage and run `usage_report.py`. One task is 72% of all tokens with a 0% cache rate. That is next week's work: reorder its prompt stable-first.
+
+The loop is always the same: **measure, trim, check, route, review.** The tools are small on purpose so you can read each one and adapt it.
+
+<br>
+
 ## The five levers
 
 ```mermaid
@@ -221,6 +239,68 @@ Thirteen single-file tools in [`tools/`](tools/). Standard library only. Every f
 | [`dedup.py`](tools/dedup.py) | Near-duplicate page finder with shingles and Jaccard similarity | 0 |
 
 <br>
+
+<details>
+<summary><strong>Tool-by-tool, with real output</strong></summary>
+
+<br>
+
+**`tokens.py`** estimates what a file costs to load.
+
+```
+$ python tools/tokens.py templates/AGENTS.md
+file                      chars   ~tok(c/4)  ~tok(w*1.33)
+templates/AGENTS.md         892         223           195
+```
+
+**`budget.py`** turns that into a monthly bill and fails (exit 2) when a file is over its limit.
+
+```
+$ python tools/budget.py examples/budget.json
+ok       templates/AGENTS.md          223 / 700
+ok       TOTAL                        255 / 1500
+Loading cost: ~76,500 tokens/month over 300 sessions
+```
+
+**`prompt_lint.py`** finds wasteful patterns without calling a model.
+
+```
+$ python tools/prompt_lint.py examples/bad-prompt.md
+... P1 volatile text in the first lines ...
+... P2 5 filler phrases ...
+... P5 eager import "@wiki/index.md" ...
+prompt_lint: 6 finding(s) in 1 file(s)
+```
+
+**`usage_report.py`** ranks where tokens go and gives one hint.
+
+```
+$ python tools/usage_report.py examples/usage.sample.jsonl
+task                     calls     total   share   avg in  cache
+weekly digest                2     11090     72%     5150     0%
+Hint: 'weekly digest' sends ~5150 input tokens per call with little caching ...
+```
+
+**`compact.py`** shrinks noisy output before it enters a context.
+
+```
+$ printf 'build ok\nbuild ok\nbuild ok\nwarn: slow\nerror: boom\n' | python tools/compact.py --head 2 --tail 2
+build ok  (x3)
+warn: slow
+error: boom
+```
+
+**`session_budget.py`** models when a fresh session beats a long one (worst case, ignores caching).
+
+```
+$ python tools/session_budget.py --turns 60 --per-turn 700
+one long session : 1,371,000 input tokens
+best split (K=3) : 244,300 input tokens  (82% fewer)
+```
+
+Every tool file opens with a plain-language explanation of why it exists, a worked example and the exit codes it uses, and every function has comments on the reasoning, not just the mechanics.
+
+</details>
 
 ## The field guide
 
@@ -310,6 +390,37 @@ Everything used to announce 2.0.0, in [`social-kit/`](social-kit/): copy for [X]
 | [`icons/`](social-kit/icons/) | Five animated GIF icons at 512 and 240 px |
 | [`svg/`](social-kit/svg/) | Four animated SVG illustrations |
 | [`gen.py`](social-kit/gen.py) | Regenerates icons, video and gallery from code (needs Pillow and ffmpeg) |
+
+<br>
+
+## Learning path
+
+| If you have | Do this |
+| --- | --- |
+| **20 minutes** | Read this README, run the Quick start, then read [chapter 1](docs/01-why-context-costs.md). |
+| **An afternoon** | Chapters 2, 4, 5 and 6, then run `prompt_lint.py` and `budget.py` on your own guide. |
+| **A week** | Build a small knowledge base with `kb.py`, add the hooks from `templates/`, and run the weekly habit in [recipe 13.10](docs/13-recipes.md). |
+| **A reading mood** | Read the tools. Start with [`router.py`](tools/router.py) (about 60 lines), then [`dedup.py`](tools/dedup.py), then [`kb.py`](tools/kb.py). |
+
+### How to read a tool in this repo
+
+1. Read the top docstring: why it exists, how it works, one worked example.
+2. Read the pure functions first (they take values and return values, and have unit tests).
+3. Read `main()` last; it only wires command-line flags to those functions.
+4. Open `tests/test_tools.py` and find the tests for that tool: they are executable examples of the expected behaviour.
+
+### Terms used in the README
+
+| Term | Meaning |
+| --- | --- |
+| **Token** | The unit models read and write; roughly three quarters of an English word. |
+| **Always-loaded** | Text sent in every session regardless of the task: guides, memory summaries, hot caches. |
+| **Hot cache** | A tiny file of current focus, read first. |
+| **Ingest** | Turning a raw source into linked wiki pages. |
+| **Manifest** | A record of which source became which pages, at which content hash. |
+| **Rung** | A step on the cheap-first ladder, from inline answer (0) to premium model (5). |
+| **Prompt caching** | A provider reusing an identical prompt prefix instead of recomputing it. |
+| **Fan-out** | Splitting work across parallel workers that return short summaries. |
 
 <br>
 

@@ -19,6 +19,17 @@ CHECKS
   P9  duplicated boilerplate across files (same long line in 2+ files)
 
 Exit code is 1 if any finding is reported, 0 otherwise.
+
+WORKED EXAMPLE
+--------------
+    $ python tools/prompt_lint.py examples/bad-prompt.md
+    examples/bad-prompt.md: P1 volatile text in the first lines (line ~1): move it below the stable block
+    examples/bad-prompt.md: P2 5 filler phrases; delete them, the instruction works without them
+    examples/bad-prompt.md: P3 line repeated 2x: "always run the linter after every wiki edit."
+    examples/bad-prompt.md: P4 1 ALL-CAPS run(s) ...; state the rule plainly once
+    examples/bad-prompt.md: P5 eager import "@wiki/index.md"; link it and read on demand instead
+    examples/bad-prompt.md: P8 no output length/format limit; output is the most expensive token
+    prompt_lint: 6 finding(s) in 1 file(s)
 """
 from __future__ import annotations
 
@@ -48,6 +59,7 @@ def lint_text(name: str, text: str, max_tokens: int = 1500) -> list[str]:
     lines = text.splitlines()
 
     # P1: look only at the first 15 non-empty lines - that is the cache-critical prefix.
+    # The first lines are the cache-critical prefix: anything volatile there hurts most.
     head = [ln for ln in lines if ln.strip()][:15]
     for i, ln in enumerate(head, 1):
         if VOLATILE.search(ln):
@@ -60,6 +72,7 @@ def lint_text(name: str, text: str, max_tokens: int = 1500) -> list[str]:
         out.append(f"{name}: P2 {hits} filler phrases; delete them, the instruction works without them")
 
     # P3: repeated lines (ignore very short lines like '---')
+    # Counter tallies each distinct long line; any line seen twice is a repeat.
     counts = collections.Counter(ln.strip().lower() for ln in lines if len(ln.strip()) > 25)
     for line, n in counts.items():
         if n > 1:

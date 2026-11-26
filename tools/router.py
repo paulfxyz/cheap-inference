@@ -13,6 +13,19 @@ THE LADDER (see docs/06-routing-ladder.md)
   2 a few parallel calls   5 premium model / high effort
 
 Escalation rule: climb one rung at a time, and only with a stated reason.
+
+WORKED EXAMPLE
+--------------
+    $ python tools/router.py "what is a hash"
+    rung 0: no escalation signal; answer inline
+    $ python tools/router.py "compare two vendors"
+    rung 2: a few lookups
+    $ python tools/router.py "look up the price" --items 120
+    rung 4: single lookup; 120 items => fan-out
+
+To change the policy, edit the RULES list: each entry is (rung, reason, regex).
+Rules are tried from the highest rung down, so an explicit "deep research"
+is never under-served by a lower-rung keyword that happens to match too.
 """
 from __future__ import annotations
 
@@ -34,10 +47,11 @@ RULES = [
 
 def pick_rung(task: str, size_hint: int = 0) -> dict:
     """Return {rung, reason}. size_hint = number of items (files, pages, rows)."""
-    text = task.lower()
+    text = task.lower()  # rules are case-insensitive; normalise once
     for rung, reason, pattern in RULES:
         if re.search(pattern, text):
-            # Many items push even a "simple" verb up the ladder.
+            # Volume changes the economics: 50+ items in the main thread would flood
+            # the context, so we move to fan-out (rung 4) even for a simple verb.
             if size_hint >= 50 and rung < 4:
                 return {"rung": 4, "reason": f"{reason}; {size_hint} items => fan-out"}
             return {"rung": rung, "reason": reason}
