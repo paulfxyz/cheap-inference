@@ -12,7 +12,7 @@ A tested, zero-dependency Python toolkit and a 14-chapter field guide for cuttin
 
 <br>
 
-<a href="https://github.com/paulfxyz/cheap-inference/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/paulfxyz/cheap-inference/ci.yml?style=for-the-badge&label=tests&color=DA552F" alt="Tests"></a>
+<a href="https://github.com/paulfxyz/cheap-inference/actions/workflows/ci.yml"><img src="https://img.shields.io/badge/tests-30_in_CI-DA552F?style=for-the-badge" alt="30 tests, run in CI"></a>
 <a href="LICENSE"><img src="https://img.shields.io/badge/licence-MIT-1D1814?style=for-the-badge" alt="Licence: MIT"></a>
 <img src="https://img.shields.io/badge/version-2.0.0-1D1814?style=for-the-badge" alt="Version 2.0.0">
 <img src="https://img.shields.io/badge/python-3.10%2B-DA552F?style=for-the-badge" alt="Python 3.10+">
@@ -21,8 +21,8 @@ A tested, zero-dependency Python toolkit and a 14-chapter field guide for cuttin
 <img src="https://img.shields.io/badge/tools-13-1D1814?style=for-the-badge" alt="13 tools">
 <img src="https://img.shields.io/badge/prompts-42-DA552F?style=for-the-badge" alt="42 prompts">
 <img src="https://img.shields.io/badge/tips-100-1D1814?style=for-the-badge" alt="100 tips">
-<img src="https://img.shields.io/github/last-commit/paulfxyz/cheap-inference?style=for-the-badge&color=DA552F" alt="Last commit">
-<img src="https://img.shields.io/github/stars/paulfxyz/cheap-inference?style=for-the-badge&color=1D1814" alt="GitHub stars">
+<a href="https://github.com/paulfxyz/cheap-inference/releases/tag/v2.0.0"><img src="https://img.shields.io/badge/release-v2.0.0-DA552F?style=for-the-badge" alt="Release v2.0.0"></a>
+<a href="https://github.com/paulfxyz/cheap-inference/stargazers"><img src="https://img.shields.io/badge/GitHub-star_it-1D1814?style=for-the-badge&logo=github&logoColor=white" alt="Star on GitHub"></a>
 
 <br><br>
 
