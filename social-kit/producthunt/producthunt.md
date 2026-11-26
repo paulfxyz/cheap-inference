@@ -32,7 +32,7 @@ Open Source, Artificial Intelligence, Developer Tools, GitHub
 1. `gallery-1-hook.png` - "Your AI bill is not your question."
 2. `gallery-2-zero-tokens.png` - 13 tools, 0 tokens, a false quote caught
 3. `gallery-3-ladder.png` - the cheap-first ladder
-4. `gallery-4-cta.png` - cheap-inference 2.0.0
+4. `gallery-4-cta.png` - cheap-inference 2.0.0, with a "Reply GOPABLO" tag at the bottom
 5. Optional video: `../video/cheap-inference-cover.mp4`
 
 ## Maker's first comment
