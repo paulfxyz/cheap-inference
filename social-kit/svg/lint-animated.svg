@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 340" role="img" aria-labelledby="t d">
+<title id="t">The linter catches a false quote</title><desc id="d">A scan line sweeps a wiki page and stops on a claim that is not in the source, marking it red. It costs zero tokens.</desc>
+<style>
+.scan{animation:sweep 5s ease-in-out infinite}
+@keyframes sweep{0%{transform:translateY(0)}60%,100%{transform:translateY(150px)}}
+.bad{animation:flag 5s steps(1) infinite}
+@keyframes flag{0%,59%{opacity:0}60%,100%{opacity:1}}
+.ok{animation:okk 5s steps(1) infinite}
+@keyframes okk{0%,29%{opacity:0}30%,100%{opacity:1}}
+.zero{animation:zz 5s steps(1) infinite}
+@keyframes zz{0%,64%{opacity:0}65%,100%{opacity:1}}
+</style>
+<rect width="1000" height="340" rx="20" fill="#1D1814"/>
+<g font-family="ui-monospace,Menlo,Consolas,monospace" font-size="16" fill="#F4EDE4">
+<text x="40" y="44" font-size="18" font-weight="700">wiki/memex.md</text>
+<text x="40" y="96">&gt; "The essential feature of the memex is the association of ideas"</text>
+<g class="ok"><text x="900" y="96" fill="#7bd88f">OK</text></g>
+<text x="40" y="146">&gt; "build trails of linked documents"</text>
+<text x="40" y="196">&gt; "The memex was first built in 1975"</text>
+<g class="bad"><rect x="30" y="172" width="560" height="34" rx="8" fill="#DA552F" opacity=".25"/><text x="610" y="196" fill="#ff8a65">QUOTE NOT IN SOURCE</text></g>
+<g class="scan"><rect x="20" y="70" width="960" height="4" fill="#DA552F"/></g>
+<g class="zero"><text x="40" y="290" font-size="20" fill="#F4EDE4">lint: 1 problem in milliseconds. Tokens spent: <tspan fill="#DA552F" font-weight="700">0</tspan></text></g>
+</g></svg>

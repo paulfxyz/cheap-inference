@@ -280,6 +280,39 @@ Start at [chapter 1](docs/01-why-context-costs.md), end at [chapter 9](docs/09-f
 
 <br>
 
+## Social kit
+
+Everything used to announce 2.0.0, in [`social-kit/`](social-kit/): copy for [X](social-kit/x-thread.md), [LinkedIn](social-kit/linkedin.md) and [Product Hunt](social-kit/producthunt/producthunt.md), plus a cover video, gallery images and five animated icons. Reuse it for your own posts about the repo.
+
+<div align="center">
+
+<a href="social-kit/video/cheap-inference-cover.mp4"><img src="social-kit/video/cover-1280x720.png" width="80%" alt="Cover frame of the 14-second cheap-inference 2.0.0 video. Click to open the MP4."></a>
+
+<sub>Cover video, 1280x720, 14 seconds. Click to open the MP4.</sub>
+
+<br><br>
+
+<img src="social-kit/icons/funnel-240.gif" width="17%" alt="Animated funnel icon">
+<img src="social-kit/icons/linter-240.gif" width="17%" alt="Animated linter icon">
+<img src="social-kit/icons/ladder-240.gif" width="17%" alt="Animated ladder icon">
+<img src="social-kit/icons/cache-240.gif" width="17%" alt="Animated cache icon">
+<img src="social-kit/icons/budget-240.gif" width="17%" alt="Animated context diet icon">
+
+</div>
+
+| File | What it is |
+| --- | --- |
+| [`x-thread.md`](social-kit/x-thread.md) | 5-post thread with alt text |
+| [`linkedin.md`](social-kit/linkedin.md) | Main post and two comments |
+| [`producthunt/producthunt.md`](social-kit/producthunt/producthunt.md) | Tagline, description, topics, maker comment, reply starters |
+| [`producthunt/`](social-kit/producthunt/) | 240 px animated thumbnail and four 1270x760 gallery images |
+| [`video/`](social-kit/video/) | Cover MP4 (with and without audio track) and still frame |
+| [`icons/`](social-kit/icons/) | Five animated GIF icons at 512 and 240 px |
+| [`svg/`](social-kit/svg/) | Four animated SVG illustrations |
+| [`gen.py`](social-kit/gen.py) | Regenerates icons, video and gallery from code (needs Pillow and ffmpeg) |
+
+<br>
+
 ## What is in this repo
 
 ```
@@ -287,6 +320,7 @@ cheap-inference/
 ├── README.md, CHANGELOG.md, VERSION
 ├── docs/            14 chapters + animated and static SVG illustrations (docs/images/)
 ├── tools/           13 stdlib-only Python tools
+├── social-kit/      announcement copy, cover video, gallery, animated icons
 ├── templates/       AGENTS.md, hot.md, ingest skill, post-edit and session-start hooks
 ├── examples/        sample-kb (clean), broken-kb (every error), budget and price tables
 ├── tests/           30 unit tests
