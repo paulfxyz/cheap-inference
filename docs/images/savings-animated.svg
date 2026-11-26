@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 380" role="img" aria-labelledby="t d">
+<title id="t">Always-loaded context before and after</title><desc id="d">Illustrative bars: a bloated guide shrinks to a budgeted one. Numbers are an example, not a benchmark.</desc>
+<style>
+.shrink{transform-origin:left center;animation:s 6s ease-in-out infinite}
+@keyframes s{0%,20%{transform:scaleX(1)}55%,85%{transform:scaleX(.18)}100%{transform:scaleX(1)}}
+.lbl{animation:l 6s steps(1) infinite}
+@keyframes l{0%,54%{opacity:0}55%,85%{opacity:1}86%,100%{opacity:0}}
+</style>
+<rect width="1000" height="380" rx="20" fill="#F4EDE4"/>
+<g font-family="ui-monospace,Menlo,Consolas,monospace" font-size="16" fill="#1D1814">
+<text x="500" y="38" text-anchor="middle" font-size="20" font-weight="700">The same guide, before and after a diet</text>
+<text x="40" y="100">guide</text><rect x="140" y="78" width="780" height="34" rx="8" fill="#1D1814" opacity=".15"/><rect class="shrink" x="140" y="78" width="780" height="34" rx="8" fill="#DA552F"/>
+<text x="40" y="170">hot cache</text><rect x="140" y="148" width="780" height="34" rx="8" fill="#1D1814" opacity=".15"/><rect class="shrink" x="140" y="148" width="780" height="34" rx="8" fill="#1D1814" style="animation-delay:.2s"/>
+<text x="40" y="240">index</text><rect x="140" y="218" width="780" height="34" rx="8" fill="#1D1814" opacity=".15"/><rect class="shrink" x="140" y="218" width="780" height="34" rx="8" fill="#DA552F" style="animation-delay:.4s"/>
+<g class="lbl"><text x="500" y="320" text-anchor="middle" font-size="20" fill="#DA552F" font-weight="700">loaded every session: only what earns its place</text></g>
+<text x="500" y="356" text-anchor="middle" opacity=".6" font-size="13">illustrative, not a benchmark: run tools/budget.py on your own files</text>
+</g></svg>
