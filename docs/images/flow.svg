@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 300" role="img" aria-labelledby="t d">
+<title id="t">Incremental ingest loop</title><desc id="d">Raw files are hashed, only new or changed ones go to the model, a script lints the result, the manifest records it.</desc>
+<rect width="1000" height="300" rx="20" fill="#F4EDE4"/>
+<defs><marker id="a" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#1D1814"/></marker></defs>
+<g font-family="ui-monospace,Menlo,Consolas,monospace" font-size="15" text-anchor="middle">
+<rect x="30" y="100" width="150" height="80" rx="12" fill="#1D1814"/><text x="105" y="136" fill="#F4EDE4">raw/</text><text x="105" y="158" fill="#F4EDE4" font-size="12">read-only sources</text>
+<rect x="230" y="100" width="150" height="80" rx="12" fill="#DA552F"/><text x="305" y="136" fill="#fff">kb.py status</text><text x="305" y="158" fill="#fff" font-size="12">hash diff, 0 tokens</text>
+<rect x="430" y="100" width="150" height="80" rx="12" fill="#1D1814"/><text x="505" y="136" fill="#F4EDE4">model</text><text x="505" y="158" fill="#F4EDE4" font-size="12">only NEW / CHANGED</text>
+<rect x="630" y="100" width="150" height="80" rx="12" fill="#DA552F"/><text x="705" y="136" fill="#fff">kb.py lint</text><text x="705" y="158" fill="#fff" font-size="12">rules, 0 tokens</text>
+<rect x="830" y="100" width="140" height="80" rx="12" fill="#1D1814"/><text x="900" y="136" fill="#F4EDE4">kb.py done</text><text x="900" y="158" fill="#F4EDE4" font-size="12">manifest + commit</text>
+<g stroke="#1D1814" stroke-width="2" marker-end="url(#a)" fill="none"><path d="M180 140 H228"/><path d="M380 140 H428"/><path d="M580 140 H628"/><path d="M780 140 H828"/><path d="M705 100 C705 40 505 40 505 98" stroke-dasharray="6 5"/></g>
+<text x="605" y="46" fill="#1D1814" font-size="12">lint errors go back to the model in the same turn</text>
+<text x="500" y="250" fill="#1D1814" opacity=".75">cost follows what changed, not how big the vault is</text>
+</g></svg>

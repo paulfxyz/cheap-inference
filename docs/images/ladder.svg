@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 440" role="img" aria-labelledby="t d">
+<title id="t">The cheap-first ladder</title><desc id="d">Six rungs from answering inline up to premium models. Escalate one rung at a time.</desc>
+<rect width="1000" height="440" rx="20" fill="#1D1814"/>
+<g font-family="ui-monospace,Menlo,Consolas,monospace" font-size="16" fill="#F4EDE4">
+<text x="500" y="36" text-anchor="middle" font-size="20" font-weight="700">Start low. Climb one rung only when you can say why.</text>
+<g id="r">
+<rect x="60" y="340" width="120" height="50" rx="8" fill="#DA552F" opacity=".35"/><text x="120" y="370" text-anchor="middle">0 inline</text>
+<rect x="200" y="290" width="120" height="100" rx="8" fill="#DA552F" opacity=".45"/><text x="260" y="345" text-anchor="middle">1 one call</text>
+<rect x="340" y="240" width="120" height="150" rx="8" fill="#DA552F" opacity=".55"/><text x="400" y="320" text-anchor="middle">2 few calls</text>
+<rect x="480" y="190" width="120" height="200" rx="8" fill="#DA552F" opacity=".68"/><text x="540" y="295" text-anchor="middle">3 one agent</text>
+<rect x="620" y="140" width="120" height="250" rx="8" fill="#DA552F" opacity=".82"/><text x="680" y="270" text-anchor="middle">4 fan-out</text>
+<rect x="760" y="90" width="120" height="300" rx="8" fill="#DA552F"/><text x="820" y="245" text-anchor="middle">5 premium</text>
+</g>
+<text x="500" y="418" text-anchor="middle" opacity=".7">cost and latency grow with every rung; so should the reason for taking it</text>
+</g></svg>

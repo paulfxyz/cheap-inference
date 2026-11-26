@@ -1,0 +1,10 @@
+{
+  "_comment": "PLACEHOLDER NUMBERS FOR ILLUSTRATION ONLY. Replace with your provider's current prices (currency per 1M tokens).",
+  "currency": "USD",
+  "routes": {
+    "small-model":            {"input_per_million": 0.20, "cached_input_per_million": 0.05, "output_per_million": 0.80},
+    "mid-model":              {"input_per_million": 1.00, "cached_input_per_million": 0.25, "output_per_million": 4.00},
+    "premium-model":          {"input_per_million": 5.00, "cached_input_per_million": 1.25, "output_per_million": 20.00},
+    "mid-model-batch":        {"input_per_million": 1.00, "cached_input_per_million": 0.25, "output_per_million": 4.00, "multiplier": 0.5}
+  }
+}

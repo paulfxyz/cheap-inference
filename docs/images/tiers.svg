@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 420" role="img" aria-labelledby="t d">
+<title id="t">Tiered context loading</title><desc id="d">Four tiers read in order: hot summary, index, sub-index, pages. Stop at the first tier that answers.</desc>
+<rect width="1000" height="420" rx="20" fill="#F4EDE4"/>
+<g font-family="ui-monospace,Menlo,Consolas,monospace" font-size="16" fill="#1D1814">
+<text x="500" y="38" text-anchor="middle" font-size="20" font-weight="700">Read in order. Stop at the first tier that answers.</text>
+<rect x="60" y="64" width="880" height="56" rx="12" fill="#DA552F"/><text x="84" y="98" fill="#fff" font-weight="700">Tier 0  hot.md</text><text x="920" y="98" fill="#fff" text-anchor="end">about a dozen lines</text>
+<rect x="100" y="138" width="800" height="56" rx="12" fill="#1D1814"/><text x="124" y="172" fill="#F4EDE4" font-weight="700">Tier 1  index.md</text><text x="880" y="172" fill="#F4EDE4" text-anchor="end">one line per page</text>
+<rect x="140" y="212" width="720" height="56" rx="12" fill="#DA552F" opacity=".75"/><text x="164" y="246" fill="#fff" font-weight="700">Tier 2  domain sub-index</text><text x="840" y="246" fill="#fff" text-anchor="end">one topic</text>
+<rect x="180" y="286" width="640" height="56" rx="12" fill="#1D1814" opacity=".85"/><text x="204" y="320" fill="#F4EDE4" font-weight="700">Tier 3  specific pages</text><text x="800" y="320" fill="#F4EDE4" text-anchor="end">only the ones needed</text>
+<text x="500" y="384" text-anchor="middle" opacity=".75">General question? Tier -1: do not open the knowledge base at all.</text>
+</g></svg>

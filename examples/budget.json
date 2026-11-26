@@ -1,0 +1,8 @@
+{
+  "total_limit_tokens": 1500,
+  "sessions_per_month": 300,
+  "files": [
+    {"path": "templates/AGENTS.md", "limit_tokens": 700},
+    {"path": "templates/hot.md", "limit_tokens": 250}
+  ]
+}
