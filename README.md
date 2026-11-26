@@ -4,7 +4,7 @@
 
 <br>
 
-# cheap-inference
+# cheap-inference <sub>2.0.0</sub>
 
 ### Pay for the tokens that change the answer.
 
@@ -14,6 +14,7 @@ A tested, zero-dependency Python toolkit and a 14-chapter field guide for cuttin
 
 <a href="https://github.com/paulfxyz/cheap-inference/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/paulfxyz/cheap-inference/ci.yml?style=for-the-badge&label=tests&color=DA552F" alt="Tests"></a>
 <a href="LICENSE"><img src="https://img.shields.io/badge/licence-MIT-1D1814?style=for-the-badge" alt="Licence: MIT"></a>
+<img src="https://img.shields.io/badge/version-2.0.0-1D1814?style=for-the-badge" alt="Version 2.0.0">
 <img src="https://img.shields.io/badge/python-3.10%2B-DA552F?style=for-the-badge" alt="Python 3.10+">
 <img src="https://img.shields.io/badge/dependencies-0-1D1814?style=for-the-badge" alt="Dependencies: 0">
 <img src="https://img.shields.io/badge/tokens_spent_on_checks-0-DA552F?style=for-the-badge" alt="Tokens spent on checks: 0">
@@ -283,7 +284,7 @@ Start at [chapter 1](docs/01-why-context-costs.md), end at [chapter 9](docs/09-f
 
 ```
 cheap-inference/
-├── README.md
+├── README.md, CHANGELOG.md, VERSION
 ├── docs/            14 chapters + animated and static SVG illustrations (docs/images/)
 ├── tools/           13 stdlib-only Python tools
 ├── templates/       AGENTS.md, hot.md, ingest skill, post-edit and session-start hooks
