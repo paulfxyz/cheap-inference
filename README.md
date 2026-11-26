@@ -12,17 +12,17 @@ A tested, zero-dependency Python toolkit and a 14-chapter field guide for cuttin
 
 <br>
 
-<a href="https://github.com/paulfxyz/cheap-inference/actions/workflows/ci.yml"><img src="https://img.shields.io/badge/tests-30_in_CI-DA552F?style=for-the-badge" alt="30 tests, run in CI"></a>
-<a href="LICENSE"><img src="https://img.shields.io/badge/licence-MIT-1D1814?style=for-the-badge" alt="Licence: MIT"></a>
-<img src="https://img.shields.io/badge/version-2.0.0-1D1814?style=for-the-badge" alt="Version 2.0.0">
-<img src="https://img.shields.io/badge/python-3.10%2B-DA552F?style=for-the-badge" alt="Python 3.10+">
-<img src="https://img.shields.io/badge/dependencies-0-1D1814?style=for-the-badge" alt="Dependencies: 0">
-<img src="https://img.shields.io/badge/tokens_spent_on_checks-0-DA552F?style=for-the-badge" alt="Tokens spent on checks: 0">
-<img src="https://img.shields.io/badge/tools-13-1D1814?style=for-the-badge" alt="13 tools">
-<img src="https://img.shields.io/badge/prompts-42-DA552F?style=for-the-badge" alt="42 prompts">
-<img src="https://img.shields.io/badge/tips-100-1D1814?style=for-the-badge" alt="100 tips">
-<a href="https://github.com/paulfxyz/cheap-inference/releases/tag/v2.0.0"><img src="https://img.shields.io/badge/release-v2.0.0-DA552F?style=for-the-badge" alt="Release v2.0.0"></a>
-<a href="https://github.com/paulfxyz/cheap-inference/stargazers"><img src="https://img.shields.io/badge/GitHub-star_it-1D1814?style=for-the-badge&logo=github&logoColor=white" alt="Star on GitHub"></a>
+<a href="https://github.com/paulfxyz/cheap-inference/actions/workflows/ci.yml"><img src="docs/images/badges/tests.svg" alt="30 tests, run in CI"></a>
+<a href="LICENSE"><img src="docs/images/badges/licence.svg" alt="Licence: MIT"></a>
+<img src="docs/images/badges/version.svg" alt="Version 2.0.0">
+<img src="docs/images/badges/python.svg" alt="Python 3.10+">
+<img src="docs/images/badges/dependencies.svg" alt="Dependencies: 0">
+<img src="docs/images/badges/tokens.svg" alt="Tokens spent on checks: 0">
+<img src="docs/images/badges/tools.svg" alt="13 tools">
+<img src="docs/images/badges/prompts.svg" alt="42 prompts">
+<img src="docs/images/badges/tips.svg" alt="100 tips">
+<a href="https://github.com/paulfxyz/cheap-inference/releases/tag/v2.0.0"><img src="docs/images/badges/release.svg" alt="Release v2.0.0"></a>
+<a href="https://github.com/paulfxyz/cheap-inference/stargazers"><img src="docs/images/badges/star.svg" alt="Star on GitHub"></a>
 
 <br><br>
 
