@@ -43,7 +43,7 @@ LINT RULES
 What the linter CANNOT do: judge whether a source is TRUE. A wrong source makes
 a faithfully wrong wiki. Keep a human in the loop for what goes into raw/.
 
-Standard library only. Python 3.9+.
+Standard library only. Python 3.10+.
 """
 from __future__ import annotations
 

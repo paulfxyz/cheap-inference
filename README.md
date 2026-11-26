@@ -10,7 +10,7 @@ A practical, tested toolkit and field guide for cutting the cost of working with
 
 <a href="https://github.com/paulfxyz/cheap-inference/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/paulfxyz/cheap-inference/ci.yml?style=for-the-badge&label=tests&color=DA552F" alt="Tests"></a>
 <a href="LICENSE"><img src="https://img.shields.io/badge/licence-MIT-1D1814?style=for-the-badge" alt="Licence: MIT"></a>
-<img src="https://img.shields.io/badge/python-3.9%2B-DA552F?style=for-the-badge" alt="Python 3.9+">
+<img src="https://img.shields.io/badge/python-3.10%2B-DA552F?style=for-the-badge" alt="Python 3.10+">
 <img src="https://img.shields.io/badge/dependencies-0-1D1814?style=for-the-badge" alt="Dependencies: 0">
 <img src="https://img.shields.io/badge/tokens_spent_on_checks-0-DA552F?style=for-the-badge" alt="Tokens spent on checks: 0">
 <img src="https://img.shields.io/badge/docs-10_chapters-1D1814?style=for-the-badge" alt="10 chapters">
@@ -53,7 +53,7 @@ The core rule fits on one line: **load less, redo less, check with code, route c
 | | |
 | --- | --- |
 | **0** | tokens spent by the linter, budget checker, deduplicator, router and cache simulator |
-| **0** | third-party dependencies; Python 3.9+ standard library only |
+| **0** | third-party dependencies; Python 3.10+ standard library only |
 | **5** | levers, each with a chapter, a template and a tool |
 | **10** | doc chapters, written to teach, not to summarise |
 | **10** | lint rules for a model-written knowledge base |
@@ -172,7 +172,7 @@ cheap-inference/
 ├── templates/            AGENTS.md, hot.md, ingest skill, post-edit and session-start hooks
 ├── examples/             sample-kb (clean), broken-kb (all the errors), budget and price tables
 ├── tests/                17 unit tests
-└── .github/workflows/    CI on Python 3.9 and 3.12
+└── .github/workflows/    CI on Python 3.10 and 3.12
 ```
 
 ## Honest limits
