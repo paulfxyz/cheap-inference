@@ -46,11 +46,11 @@ Star it if it saves you tokens.
 
 ---
 
-## Optional hook line (your GOPOLO mechanic)
+## Optional hook line (your GOPABLO mechanic)
 
 Add to post 5 if you want the reply mechanic, and only if you will deliver what it promises:
 
-"Reply GOPOLO and I will send you my cost-cutting setup notes."
+"Reply GOPABLO and I will send you my cost-cutting setup notes."
 
 ## Alt text (accessibility)
 

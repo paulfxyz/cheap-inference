@@ -46,11 +46,11 @@ If one fails on your data, open an issue with the command and its output. A clai
 
 ---
 
-## Optional hook line (your GOPOLO mechanic)
+## Optional hook line (your GOPABLO mechanic)
 
 Add to the end of the main post if you want it, and only if you will deliver:
 
-"Comment GOPOLO and I will send you my cost-cutting setup notes."
+"Comment GOPABLO and I will send you my cost-cutting setup notes."
 
 ## Alt text
 

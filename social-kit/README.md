@@ -32,4 +32,4 @@ kit/
 - No author is named and no outside post is linked.
 - Counts of characters: tagline within 60, short description within 260.
 
-Notes: the GIFs are generated frames (no audio). The GOPOLO hook is optional and only appears as a marked line; remove it if you do not want it.
+Notes: the GIFs are generated frames (no audio). The GOPABLO hook is optional and only appears as a marked line; remove it if you do not want it.
