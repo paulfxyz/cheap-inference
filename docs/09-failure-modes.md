@@ -4,11 +4,11 @@
 
 ## 9.1 The dead zone
 
-Below roughly 50 to 100 sources, a compiled wiki behaves like a good search engine. You pay the setup cost and get search back. This is where most people quit. If you have few sources, skip the wiki and put them in a folder.
+Where a compiled wiki does not pay off is a function of source size, query volume and churn, not of source count. Use `tools/wiki_roi.py` to compute the break-even for your numbers instead of trusting a rule of thumb. The pattern most people quit at is the early stretch where setup cost is paid and the wiki is still small.
 
 ## 9.2 Scale
 
-A wiki works well while its index fits comfortably in one context window. Past that, you need sub-indexes (chapter 2) or real retrieval. Some critics point out the approach does not scale indefinitely; they are right, and some of them sell a competing product, so weigh both facts. Independent reviews of small month-long trials report mixed results: helpful for narrow cases, with maintenance time and time saved roughly a wash in the first month. Plan for a payoff over months, not days.
+A wiki works well while its index fits comfortably in one context window. Past that, you need sub-indexes (chapter 2) or real retrieval. Some critics point out the approach does not scale indefinitely; they are right, and some of them sell a competing product, so weigh both facts. Reports of small month-long trials are mixed (helpful for narrow cases, with maintenance time and time saved roughly a wash in the first month). This repository does not cite a specific study and has not benchmarked the pattern, so treat that as anecdote. Measure your own break-even and plan for a payoff over months, not days.
 
 ## 9.3 Bad sources spread
 

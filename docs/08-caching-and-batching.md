@@ -25,6 +25,13 @@ timestamp-first    : 0% of tokens cacheable
 
 The numbers come from a toy model with made-up segment sizes, but the shape is real: a single volatile token near the top can cost you the whole benefit.
 
+## 8.2b Caching is not always a win
+
+- Some providers charge a PREMIUM to write to the cache. A prefix that is written and never reused costs more than not caching.
+- Caches expire (a time-to-live) and ignore prefixes under a minimum size. A guide trimmed to 255 tokens may be too small to cache at all; trimming and caching pull in different directions.
+- Break-even: caching wins when the prefix is reused enough times inside the TTL. `python tools/cache_breakeven.py --prefix-tokens 5000 --write 1.25 --read 0.1` does the arithmetic with your ratios.
+- If hundreds of requests share a big prefix, do not start them all at once: nothing is cached yet. Send one warm-up request first and the rest in waves (`tools/wave_plan.py`).
+
 ## 8.3 Checklist for cache-friendly prompts
 
 1. Stable instructions first, then stable reference material, then the changing part.
@@ -54,8 +61,8 @@ Good candidates: anything you would run overnight anyway. Poor candidates: inter
 ## 8.6 Fewer, better calls
 
 - Combine related small questions into one structured request.
-- Ask for the answer in the shape you will use (JSON, a table) so no second call is needed to reformat.
-- Cache your own results. If a deterministic input gives a deterministic output (a translation of a fixed string, a classification of a stored record), store it and look it up next time. A dictionary lookup is cheaper than any model.
+- Ask for the answer in the shape you will use (JSON, a table) so no second call is needed to reformat. Note that JSON is often NOT shorter in tokens (keys, quotes and braces repeat) and strict formats can reduce reasoning quality on some tasks; for tabular data compare with `tools/payload_compact.py` and test quality first.
+- Cache your own results. If the same input can reasonably reuse the same output (a translation of a fixed string, a classification of a stored record), store it and look it up next time. A dictionary lookup is cheaper than any model, but model output is NOT strictly deterministic, so the cache freezes one sample, good or bad.
 
 ## 8.7 A local result cache in 15 lines
 
@@ -75,4 +82,4 @@ def cached(fn_name: str, payload: dict, compute):
     return result
 ```
 
-Include the model name and prompt version in `payload`, so changing either invalidates the stored answers.
+Include the model name, sampling settings and prompt version in `payload`, so changing any of them invalidates the stored answers. The full version, with a TTL and atomic writes, is `tools/response_cache.py`.

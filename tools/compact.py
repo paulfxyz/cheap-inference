@@ -70,7 +70,11 @@ def grep_with_context(lines: list[str], pattern: str, context: int) -> list[str]
     return out
 
 
-def compact(text: str, head: int = 40, tail: int = 60, grep: str | None = None, context: int = 1) -> tuple[str, dict]:
+# Lines that must survive truncation: the root cause often sits in the MIDDLE of a log.
+KEEP = re.compile(r"error|fatal|panic|traceback|exception|fail", re.I)
+
+
+def compact(text: str, head: int = 40, tail: int = 60, grep: str | None = None, context: int = 1, keep: bool = True) -> tuple[str, dict]:
     """Return (compacted_text, stats). Pure function, easy to test."""
     # Step 1: strip colour codes and trailing spaces so identical lines compare equal.
     raw_lines = [ANSI.sub("", ln).rstrip() for ln in text.splitlines()]
@@ -83,8 +87,11 @@ def compact(text: str, head: int = 40, tail: int = 60, grep: str | None = None, 
         lines = grep_with_context(lines, grep, context)
     # Step 5: keep both ends (setup at the start, failures at the end) and say what was cut.
     if len(lines) > head + tail:
-        omitted = len(lines) - head - tail
-        lines = lines[:head] + [f"... [{omitted} lines omitted] ..."] + lines[-tail:]
+        middle = lines[head : len(lines) - tail]
+        # Rescue important lines from the cut region (review finding: head/tail alone can drop the cause).
+        saved = [ln for ln in middle if KEEP.search(ln)][:40] if keep else []
+        omitted = len(middle) - len(saved)
+        lines = lines[:head] + [f"... [{omitted} lines omitted, {len(saved)} important kept] ..."] + saved + lines[-tail:]
     result = "\n".join(lines)
     stats = {"lines_before": before, "lines_after": len(lines), "chars_before": len(text), "chars_after": len(result)}
     return result, stats

@@ -58,6 +58,16 @@ def floor(rows: list[dict], kind: str, min_samples: int = 3, min_rate: float = 0
     return {"kind": kind, "floor": 0, "evidence": "no data; start at rung 0"}
 
 
+def should_probe(rows: list[dict], kind: str, every: int = 10) -> bool:
+    """True when it is time to RE-TEST one rung lower for this kind of task.
+
+    A floor learned from a few lucky successes can lock a task onto a rung that is too low or too high.
+    Re-probing periodically (every N runs of the kind) keeps the floor honest as models and tasks change.
+    """
+    n = sum(1 for r in rows if r["kind"] == kind)
+    return n > 0 and n % every == 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--log", default=str(DEFAULT_LOG))

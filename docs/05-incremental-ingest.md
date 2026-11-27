@@ -36,10 +36,10 @@ If the output is empty, the correct cost of tonight's job is zero.
 
 1. `python tools/kb.py status` - get the work list. Work only on those files.
 2. The model reads each file fully, creates or updates pages, writes quote lines, links related pages.
-3. `python tools/kb.py lint` - repeat until it exits 0.
+3. `python tools/kb.py lint --skip-stale` - repeat until it exits 0. (A plain `lint` cannot pass yet for a CHANGED file: rule R7 compares the raw file with the manifest, and `done` has not updated the manifest. A multi-model review caught this sequencing bug.)
 4. `python tools/kb.py done raw/x.md wiki/a.md wiki/b.md` - record the result.
-5. `python tools/kb.py index` - regenerate the index.
-6. `git add -A && git commit -m "ingest x"` - the diff shows exactly what changed in your knowledge.
+5. `python tools/kb.py index` - regenerate the index, then run a strict `python tools/kb.py lint`.
+6. `git add wiki/ .brain/ && git commit -m "ingest x"` - stage only what ingest owns, never `git add -A`, which can sweep in unrelated files or secrets. The diff shows exactly what changed in your knowledge.
 
 The template skill [`templates/ingest-skill.md`](../templates/ingest-skill.md) turns this into a single command.
 
@@ -52,14 +52,14 @@ The template skill [`templates/ingest-skill.md`](../templates/ingest-skill.md) t
 
 For unattended runs, use a non-interactive invocation of your agent with a narrow tool allow-list: read, edit wiki, run `kb.py`, commit. Notes from experience:
 
-- Allow-list the exact commands (`python3 tools/kb.py *`, `git add *`, `git commit *`) rather than allowing everything.
-- Make the first step `status`. If it prints nothing, exit without calling the model at all. A small shell guard does this:
+- Allow-list narrowly: `python3 tools/kb.py *` is a pattern, not an exact command, and broad staging patterns can commit unrelated files. Prefer explicit paths (`git add wiki/ .brain/`).
+- Make the first step `status`. If it prints nothing, exit without calling the model at all. A small shell guard does this, and it must tell "nothing changed" apart from "status failed":
 
 ```bash
 #!/bin/bash
-# Skip the expensive part entirely when nothing changed.
-pending=$(python3 tools/kb.py status 2>/dev/null | wc -l)
-[ "$pending" -eq 0 ] && exit 0
+set -eo pipefail                      # a failing status must not look like a quiet night
+out=$(python3 tools/kb.py status 2>/dev/null) || { echo "status failed" >&2; exit 1; }
+[ -z "$out" ] && exit 0               # genuinely nothing changed: spend nothing
 # ...otherwise start the agent run here...
 ```
 

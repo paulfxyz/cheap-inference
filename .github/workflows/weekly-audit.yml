@@ -1,0 +1,27 @@
+name: weekly-audit
+# A scheduled example of the weekly review. Point it at your own usage log by committing one
+# (or downloading one in an earlier step); the sample files make it runnable out of the box.
+on:
+  schedule:
+    - cron: "0 7 * * 1"   # Mondays 07:00 UTC
+  workflow_dispatch:
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build the weekly report
+        run: |
+          python workflows/weekly_audit.py \
+            --log examples/usage.sample.jsonl \
+            --budget examples/budget.json \
+            --prompts templates/AGENTS.md \
+            --kb examples/sample-kb \
+            --out weekly-audit.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: weekly-audit
+          path: weekly-audit.md

@@ -21,7 +21,8 @@ COMMANDS
 --------
   status              list raw files that are NEW, CHANGED or DELETED since ingest.
   done RAW PAGE...    record that RAW was ingested into the given wiki pages.
-  lint                run every rule below; exit code 2 if anything fails.
+  lint [--skip-stale] run every rule below; exit code 2 if anything fails. Use --skip-stale
+                      between writing pages and `done`; run a strict lint after `done`.
   index               regenerate wiki/index.md.
   stats               sizes, token estimates, page ages, biggest pages.
   stale [--days N]    pages not updated for N days (default 90).
@@ -77,7 +78,10 @@ def tokens_of(text: str) -> int:
 
 def normalise(s: str) -> str:
     """Collapse whitespace so line-wrapping differences never cause false alarms."""
-    return " ".join(s.split())
+    # Typographic quotes and dashes are mapped to ASCII so a curly quote never causes a false
+    # "QUOTE NOT IN SOURCE" (review finding: verbatim matching was brittle to punctuation).
+    table = {ord(c): "'" for c in "\u2018\u2019"} | {ord(c): '"' for c in "\u201c\u201d"} | {ord(c): "-" for c in "\u2013\u2014"}
+    return " ".join(s.translate(table).split())
 
 
 def parse_frontmatter(text: str):
@@ -167,7 +171,7 @@ class KB:
         return 0
 
     # ------------------------------------------------------------------ lint
-    def lint(self, today: dt.date | None = None) -> list[str]:
+    def lint(self, today: dt.date | None = None, skip_stale: bool = False) -> list[str]:
         """Run every rule and return a list of human-readable problems (empty = clean)."""
         today = today or dt.date.today()
         errs: list[str] = []
@@ -240,8 +244,11 @@ class KB:
             if c == 0 and names[n].name not in SPECIAL:
                 errs.append(f"{self.rel(names[n])}: orphan (no inbound links)")
 
-        # R7: raw changed after ingest
-        for k, v in manifest.items():
+        # R7: raw changed after ingest. During an ingest the manifest is updated by `done` AFTER the
+        # pages are written, so a correct edit would keep failing R7 until `done` runs (a sequencing bug
+        # found in review). `lint --skip-stale` runs every rule except R7 for that mid-ingest pass;
+        # run a strict `lint` after `done`.
+        for k, v in ({} if skip_stale else manifest).items():
             f = self.root / k
             if f.exists() and sha(f) != v["sha"]:
                 errs.append(f"{k}: changed since ingest, pages stale: {', '.join(v['pages'])}")
@@ -300,7 +307,7 @@ def main(argv: list[str] | None = None) -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("status")
     d = sub.add_parser("done"); d.add_argument("raw"); d.add_argument("pages", nargs="+")
-    sub.add_parser("lint")
+    lp = sub.add_parser("lint"); lp.add_argument("--skip-stale", action="store_true", help="skip R7 (use between writing pages and running `done`)")
     sub.add_parser("index")
     sub.add_parser("stats")
     s = sub.add_parser("stale"); s.add_argument("--days", type=int, default=90)
@@ -316,7 +323,7 @@ def main(argv: list[str] | None = None) -> int:
     if a.cmd == "done":
         return kb.done(a.raw, a.pages)
     if a.cmd == "lint":
-        errs = kb.lint()
+        errs = kb.lint(skip_stale=a.skip_stale)
         for e in errs:
             print(e, file=sys.stderr)
         print(f"lint: {len(errs)} problem(s) in {len(kb.pages())} pages", file=sys.stderr)

@@ -1,0 +1,21 @@
+name: cost-gate
+# Runs on every pull request: the cheap, zero-token checks that stop cost regressions from merging.
+on:
+  pull_request:
+  workflow_dispatch:
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Always-loaded files fit the budget
+        run: python tools/budget.py examples/budget.json
+      - name: Templates are free of token waste
+        run: python tools/prompt_lint.py templates/AGENTS.md
+      - name: Knowledge base lints clean
+        run: python tools/kb.py --root examples/sample-kb lint
+      - name: No near-duplicate pages
+        run: python tools/dedup.py examples/sample-kb/wiki --threshold 0.8

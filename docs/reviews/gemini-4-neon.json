@@ -1,0 +1,262 @@
+{
+ "audit": {
+  "problems": [
+   {
+    "quote": "Always-loaded files are billed on every session. The budget checker prints the monthly loading bill.",
+    "issue": "Understates multi-turn cost (always-loaded text is sent on every turn/request, not once per session) and omits prompt caching (cached prefixes cost 10-25% of fresh input) and minimum cacheable prefix thresholds.",
+    "fix": "Model cost per turn/request rather than per session, and add cache-hit rate and minimum-prefix-threshold parameters to budget.py."
+   },
+   {
+    "quote": "best split (K=3) : 244,300 input tokens  (82% fewer)",
+    "issue": "Ignoring prompt caching massively overstates the savings of splitting sessions on modern APIs where growing history is cached at 75-90% off; also ignores handover summary tokens and context-loss rework.",
+    "fix": "Add --cache-discount and --handover-tokens flags to session_budget.py and display both cached and uncached comparisons."
+   },
+   {
+    "quote": "One timestamp at the top of a prompt can zero your cache hit rate.",
+    "issue": "Omits the provider minimum prefix length (typically 1,024-2,048 tokens). Trimming a guide to 255 tokens (as in the walkthrough) drops it below the cacheable minimum unless followed by other stable content like tool schemas.",
+    "fix": "Document minimum cacheable prefix thresholds in Chapter 8 and add a --min-cache-tokens threshold check to cache_sim.py."
+   },
+   {
+    "quote": "Suggested starting limits: guide 700 tokens, hot cache 250, total always-loaded 1,500.",
+    "issue": "Ignores tool and MCP schema definitions, which routinely consume 3,000-15,000+ always-loaded tokens per turn in modern agent setups\u2014dwarfing a 250-token guide.",
+    "fix": "Include tool/MCP schema JSON files in budget.py and Chapter 2 as first-class always-loaded overhead."
+   },
+   {
+    "quote": "A planted lie passes a model reviewer more often than you would think. A 10-rule script catches it in milliseconds.",
+    "issue": "Verbatim substring matching (R6) is brittle to minor punctuation/whitespace normalization and can be bypassed by attaching a real quote to a false paraphrase right above it.",
+    "fix": "Normalize whitespace/punctuation in R6 and explicitly note that R6 verifies quote existence, not logical entailment."
+   },
+   {
+    "quote": "Forty documents in the main thread are paid for on every later turn. Forty workers returning three lines each are not.",
+    "issue": "Ignores per-worker overhead: 40 parallel workers each pay the system prompt and tool schemas, and firing all 40 simultaneously causes 40 prefix-cache misses and potential rate-limit retries.",
+    "fix": "Advise minimal zero-tool worker prompts, a 1-call cache warmup before parallel fan-out, and concurrency capping."
+   },
+   {
+    "quote": "Below roughly 50 to 100 sources a wiki is not worth building.",
+    "issue": "Arbitrary threshold. ROI depends on query frequency and source size, not raw file count: 10 dense specs queried 500x/month justify a wiki; 200 small notes queried once a year do not.",
+    "fix": "Replace the flat count with a break-even formula: (ingest_cost + maintenance_cost) < (queries * saved_tokens_per_query)."
+   },
+   {
+    "quote": "The model reads the source and updates 5 to 15 pages",
+    "issue": "Rewriting 5-15 pages per source burns expensive output tokens (3x-5x input price) and creates large git diffs that humans will stop reviewing, weakening the human-in-the-loop safeguard.",
+    "fix": "Cap pages touched per ingest (e.g., 1-3) and use targeted patch/diff edits instead of full-page rewrites."
+   },
+   {
+    "quote": "Draft with a cheap model, review the diff with a better one only when the stakes justify it.",
+    "issue": "Omits rework economics: if the cheap model fails 30-40% of the time, cheap draft + expensive review + rewrite costs more than using the strong model once.",
+    "fix": "State the break-even rule: only use draft-then-review when cheap_cost + p(fail) * expensive_cost < expensive_cost."
+   },
+   {
+    "quote": "Token counts are estimates (characters / 4, words x 1.33).",
+    "issue": "For code, JSON, logs, and non-Latin scripts (CJK, Cyrillic, Arabic), chars/4 underestimates real tokens by 2x-4x, allowing budget.py to silently pass oversized files.",
+    "fix": "Add a content-aware heuristic in tokens.py (higher multipliers for non-ASCII, punctuation/JSON, and code) when tiktoken is unavailable."
+   }
+  ],
+  "keep": [
+   "Zero-dependency, zero-token deterministic linting (kb.py lint with exit code 2 wired to post-edit hooks) instead of paying LLMs to check structure, links, and quotes.",
+   "Content-hashed incremental ingest manifest (kb.py status) so unchanged vaults cost zero tokens and spend scales with deltas rather than corpus size.",
+   "Stable-first prompt ordering (cache_sim.py and prompt_lint.py flagging volatile headers) to protect provider prefix caching.",
+   "Tiered loading (hot.md -> index.md -> pages), explicit 'when not to read' rules, and banning eager @imports of large files.",
+   "Local deterministic result caching keyed by function, payload, model, and prompt version, paired with transparent cheap-first routing (router.py + ladder_log.py)."
+  ]
+ },
+ "techniques": [
+  {
+   "name": "Tool and MCP Schema Pruning",
+   "saves": "Cuts 50-80% of always-loaded input tokens by stripping verbose descriptions, examples, and unused tools from agent/MCP JSON schemas sent on every turn.",
+   "risk": "Over-pruning parameter descriptions causes malformed tool calls; removing a needed tool causes hallucinations or task failure.",
+   "tool": {
+    "filename": "tool_prune.py",
+    "algorithm": "Read a JSON array of tool schemas and an optional allowlist/keyword filter. Drop tools not matching the filter, truncate each description to its first sentence, recursively strip non-essential keys (examples, title, $schema, redundant defaults), and emit compact JSON plus estimated token savings."
+   }
+  },
+  {
+   "name": "AST Skeleton Code Extraction",
+   "saves": "Cuts 70-90% of input tokens when giving an LLM codebase context by sending only imports, class/function signatures, type hints, and first-line docstrings.",
+   "risk": "Hides implementation details needed for deep bug-fixing or side-effect analysis; requires on-demand full-file fetch when editing.",
+   "tool": {
+    "filename": "code_skel.py",
+    "algorithm": "Parse Python files with stdlib ast. Walk FunctionDef/AsyncFunctionDef nodes and replace their body with a single Ellipsis (...) while preserving decorators, args, type annotations, and the first line of docstrings. Unparse with ast.unparse() and print token reduction."
+   }
+  },
+  {
+   "name": "Search-and-Replace Patch Guard",
+   "saves": "Cuts 80-95% of expensive output tokens by letting models emit tiny search/replace blocks instead of rewriting entire files.",
+   "risk": "Fails if the search anchor is not unique or has whitespace drift; weak models may need a retry on mismatch.",
+   "tool": {
+    "filename": "patch_guard.py",
+    "algorithm": "Read a target file and a list of {search, replace} blocks from JSON/stdin. Verify each search block appears exactly once in the file; if 0 or >1 matches, exit 2 with the nearest matching line numbers on stderr. Otherwise apply all replacements atomically and write the file."
+   }
+  },
+  {
+   "name": "Normalized Deterministic Response Cache",
+   "saves": "Increases local cache hit rates on repeated near-identical queries (casing, whitespace, timestamps, request IDs) without needing an embedding model.",
+   "risk": "Over-normalization (e.g., stripping punctuation or case) can collapse distinct code or math queries into wrong cached answers.",
+   "tool": {
+    "filename": "norm_cache.py",
+    "algorithm": "Normalize prompt text (collapse whitespace, optional lowercase, strip configurable volatile regexes like dates/UUIDs). Hash [model, prompt_version, normalized_text] with SHA-256 and look up in a stdlib sqlite3 table with TTL expiry; track hit/miss counts."
+   }
+  },
+  {
+   "name": "JSON-to-TSV Payload Compaction",
+   "saves": "Eliminates repeated JSON keys and formatting overhead in tabular tool outputs or API payloads, cutting input tokens by 40-65%.",
+   "risk": "Loses structure on deeply nested heterogeneous objects; models can misalign columns on very wide (>12 column) tables.",
+   "tool": {
+    "filename": "data_slim.py",
+    "algorithm": "Load JSON/JSONL, recursively drop null/empty/excluded keys, and check if a list of dicts shares a flat schema. If uniform, emit a single header row plus tab-separated values; otherwise emit minified JSON (separators=(',', ':')) and report chars/tokens saved."
+   }
+  },
+  {
+   "name": "Deterministic Regex/Rule Pre-Filter",
+   "saves": "Resolves 40-70% of routine classification, routing, or extraction items at zero tokens before calling an LLM on the remaining ambiguous tail.",
+   "risk": "Overly broad regex rules create false positives that never get LLM review.",
+   "tool": {
+    "filename": "triage.py",
+    "algorithm": "Read JSONL records and a JSON ruleset of {label, field, regex}. Evaluate rules in order for each record; write matched records to resolved.jsonl with the matched rule ID, and unmatched records to ambiguous.jsonl. Print coverage percentage to stderr."
+   }
+  },
+  {
+   "name": "Prefix-Cache Warmup and Wave Pacer",
+   "saves": "Prevents N simultaneous cache misses during parallel fan-out by warming the shared prefix with 1 canary call, unlocking 75-90% input discounts on the remaining N-1 calls.",
+   "risk": "Adds one request latency before the parallel burst begins; cache can still expire if waves exceed provider TTL.",
+   "tool": {
+    "filename": "cache_pacer.py",
+    "algorithm": "Read a JSONL batch of requests, hash each request's stable prefix, and group by prefix hash. Emit a schedule: wave 0 has 1 canary item per prefix group, followed by parallel waves of size W paced within the provider's cache TTL and RPM limits."
+   }
+  },
+  {
+   "name": "Multi-Item Batch Packing",
+   "saves": "Amortizes fixed system prompts and few-shot examples across 10-20 small items per call, cutting input overhead by 80-95%.",
+   "risk": "Packing too many items degrades accuracy ('lost in the middle'), risks output truncation, or causes ID misalignment.",
+   "tool": {
+    "filename": "batch_pack.py",
+    "algorithm": "Read JSONL items and pack them into chunks bounded by max_items and max_input_tokens, tagging each item with a sequential integer ID. Provide an unpack mode that parses the model's JSON map by ID and outputs any missing or malformed IDs to retry.jsonl."
+   }
+  },
+  {
+   "name": "Output Token Cap Auditor",
+   "saves": "Caps runaway verbosity on the most expensive token type (output) by setting data-driven max_tokens and stop sequences per task.",
+   "risk": "Setting max_tokens below the true tail truncates answers or breaks closing JSON braces.",
+   "tool": {
+    "filename": "output_cap.py",
+    "algorithm": "Parse JSONL usage logs grouped by task, compute p50/p95/p99 output_tokens and output/input ratios using stdlib statistics. Recommend max_tokens = ceil(p99 * 1.15) and flag tasks with high variance or >2:1 output-to-input ratios."
+   }
+  },
+  {
+   "name": "Reasoning / Thinking Token Auditor",
+   "saves": "Identifies tasks where hidden reasoning/thinking tokens (billed as output) dominate spend, enabling 40-80% savings via lower reasoning-effort settings.",
+   "risk": "Lowering reasoning effort on genuinely hard logic, math, or debugging tasks drops accuracy.",
+   "tool": {
+    "filename": "think_audit.py",
+    "algorithm": "Read JSONL usage logs containing reasoning_tokens and output_tokens per task. Flag tasks where median reasoning_tokens > 3x visible output_tokens or where low-effort runs already have high acceptance, and output recommended effort tiers."
+   }
+  },
+  {
+   "name": "Checkpoint Tool-Output Eviction",
+   "saves": "Cuts 50-75% of mid-session input tokens in long agent runs by replacing stale tool outputs (old file reads/logs) with 1-line stubs.",
+   "risk": "Mutating earlier turns invalidates the prefix cache once; unprofitable if done every turn instead of at periodic checkpoints.",
+   "tool": {
+    "filename": "ctx_evict.py",
+    "algorithm": "Read a conversation JSON array, identify tool-role messages older than K turns, and compute tokens freed by replacing them with '[evicted: tool_name, N chars]'. Compare freed_tokens * remaining_turns against one cache-miss penalty and only apply if net positive."
+   }
+  },
+  {
+   "name": "Cascade Break-Even Evaluator",
+   "saves": "Replaces guesswork in cheap-first cascades with exact break-even math so you only cascade when cheap pass rates actually save money.",
+   "risk": "Small or unrepresentative eval sets can misestimate the real-world pass rate.",
+   "tool": {
+    "filename": "cascade_eval.py",
+    "algorithm": "Read a JSONL eval log of {task, cheap_pass, cheap_cost, expensive_cost}. Compute empirical pass rate p, expected cascade cost (cheap_cost + (1-p)*expensive_cost), break-even pass rate (cheap_cost / expensive_cost), and net savings vs always-expensive."
+   }
+  }
+ ],
+ "workflows": [
+  {
+   "name": "Zero-Waste Codebase Editing Loop",
+   "steps": [
+    "Run code_skel.py on target modules to give the model a compact structural map.",
+    "Ask the model to request full bodies only for the 1-2 files it must edit.",
+    "Instruct the model to return search-and-replace blocks rather than full files.",
+    "Apply edits with patch_guard.py; on exit 2, feed stderr back to retry only the failed block.",
+    "Run unit tests deterministically and commit."
+   ],
+   "tools": [
+    "code_skel.py",
+    "patch_guard.py"
+   ]
+  },
+  {
+   "name": "Cache-Warmed Bulk Classification and Extraction",
+   "steps": [
+    "Run triage.py to resolve easy items via regex rules at zero tokens.",
+    "Check remaining items against norm_cache.py to skip normalized duplicates.",
+    "Group uncached items into token-bounded chunks with batch_pack.py.",
+    "Schedule 1 canary warmup call per prefix followed by parallel waves with cache_pacer.py.",
+    "Unpack and validate responses with batch_pack.py, retrying only missing/malformed IDs."
+   ],
+   "tools": [
+    "triage.py",
+    "norm_cache.py",
+    "batch_pack.py",
+    "cache_pacer.py"
+   ]
+  },
+  {
+   "name": "Agent Tool-Schema and Context Diet",
+   "steps": [
+    "Export active agent/MCP tool schemas and prune descriptions and unused tools with tool_prune.py.",
+    "Run budget.py across guide, hot cache, and pruned tool schemas to verify total always-loaded tokens.",
+    "Run prompt_lint.py to remove volatile headers and filler.",
+    "Verify with cache_sim.py that the stable prefix exceeds the provider's minimum cache threshold."
+   ],
+   "tools": [
+    "tool_prune.py",
+    "budget.py",
+    "prompt_lint.py",
+    "cache_sim.py"
+   ]
+  },
+  {
+   "name": "Long-Session Checkpoint Eviction",
+   "steps": [
+    "Run interactive agent turns normally while prefix caching is warm.",
+    "Every 10 turns, run ctx_evict.py on the message history to compare eviction savings against one cache-rebuild penalty.",
+    "If net positive, replace stale tool outputs with 1-line stubs and continue.",
+    "If approaching the session-split threshold in session_budget.py, summarize into hot.md and start fresh."
+   ],
+   "tools": [
+    "ctx_evict.py",
+    "session_budget.py"
+   ]
+  },
+  {
+   "name": "Weekly Output and Reasoning Spend Audit",
+   "steps": [
+    "Export weekly API usage logs to JSONL.",
+    "Run usage_report.py to identify the top cost-driving tasks.",
+    "Run output_cap.py to derive p99-based max_tokens caps for verbose tasks.",
+    "Run think_audit.py to spot tasks burning excessive hidden reasoning tokens and downgrade their effort tier.",
+    "Compare projected savings with costcalc.py before deploying config changes."
+   ],
+   "tools": [
+    "usage_report.py",
+    "output_cap.py",
+    "think_audit.py",
+    "costcalc.py"
+   ]
+  },
+  {
+   "name": "Evidence-Based Model Cascade Tuning",
+   "steps": [
+    "Run a 50-item representative sample through both a cheap model and a strong model with a deterministic validator.",
+    "Feed results into cascade_eval.py to check whether the cheap pass rate beats the break-even threshold.",
+    "If profitable, deploy cheap-first with automatic fallback on validator failure.",
+    "Record live outcomes in ladder_log.py to adjust the floor if drift occurs."
+   ],
+   "tools": [
+    "cascade_eval.py",
+    "ladder_log.py"
+   ]
+  }
+ ]
+}

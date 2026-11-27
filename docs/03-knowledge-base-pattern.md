@@ -10,7 +10,7 @@ The alternative is to let the model build a small set of linked, plain-text page
 
 ## 3.2 Why a model does the maintenance
 
-People stop maintaining wikis because upkeep grows faster than value: every new source should touch a dozen pages, every claim should be cross-referenced, every contradiction reconciled. A model does not get bored, does not forget a cross-reference, and can edit fifteen files in one pass. The cost is tokens, which is exactly why the rest of this repository exists: keep the model's work small, incremental and checked by code.
+People stop maintaining wikis because upkeep grows faster than value: every new source should touch a dozen pages, every claim should be cross-referenced, every contradiction reconciled. A model does not get bored and can edit fifteen files in one pass. It does still drop links, invent pages and skip contradictions, which is exactly why the checks in chapter 4 exist; treat unattended ingest as something to review, not to trust. The cost is tokens, which is exactly why the rest of this repository exists: keep the model's work small, incremental and checked by code.
 
 ## 3.3 Layout
 
@@ -115,4 +115,10 @@ concepts mentioned in several places without a page of their own. Fix nothing ye
 
 ## 3.9 When not to build one
 
-Below roughly 50 to 100 sources, a structured wiki behaves like a good search engine: you pay the setup cost and get search back. If you have a handful of documents, put them in a folder and search them. Build the wiki when you are repeatedly re-explaining the same material. `kb.py stats` reports a `dead_zone` flag as a reminder.
+Earlier versions of this guide said "below roughly 50 to 100 sources, don't bother". Reviewers rightly called that arbitrary: source COUNT predicts neither cost nor value. Ten dense specifications queried 500 times a month can justify a wiki; two thousand rarely-read notes cannot. Use arithmetic instead:
+
+```bash
+python tools/wiki_roi.py --questions 200 --raw-per-q 6000 --wiki-per-q 1500 --changed 20 --ingest 12000
+```
+
+It compares monthly tokens with and without a wiki and prints the break-even number of questions. The inputs are your own measurements; `kb.py stats` still prints a `dead_zone` flag below 50 sources, as a prompt to run the calculation, not as a verdict.

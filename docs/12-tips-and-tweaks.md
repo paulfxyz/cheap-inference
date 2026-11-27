@@ -1,6 +1,6 @@
 # 12. Tips and tweaks
 
-> One hundred concrete, small changes. Each is cheap to try and easy to undo. Grouped by where the savings come from. Measure before and after with `tools/tokens.py` or `tools/usage_report.py`.
+> One hundred and 54 concrete, small changes. Each is cheap to try and easy to undo. Grouped by where the savings come from. Measure before and after with `tools/tokens.py` or `tools/usage_report.py`.
 
 ## 12.1 Always-loaded context (1-15)
 
@@ -125,3 +125,60 @@
 98. Keep secrets out of guides and knowledge bases.
 99. Enforce rules with permissions, not with requests.
 100. Never trade away safety or compliance instructions to save tokens.
+
+## 12.9 Added in 2.1.0 (101-154)
+
+101. Run `schema_diet.py` before adding your next tool: every schema is paid for on every request.
+102. Shorten tool descriptions to when-to-call, not how-it-works.
+103. Load rarely used tools on demand instead of always.
+104. Multiply your always-loaded text by requests, not by sessions.
+105. Ask for a patch (SEARCH/REPLACE), not the whole file.
+106. Apply patches all-or-nothing with `edit_guard.py`; a refused patch is cheap, a silent bad edit is not.
+107. Collapse exact duplicates before any bulk job; it is free.
+108. Answer with rules first and spend a model only on the remainder.
+109. Spot-check 20 rule-answered rows before trusting a rule.
+110. Pack small items into micro-batches of 10 to 30, keyed by ID.
+111. Retry the failed item, not the batch.
+112. Re-ask only the invalid fields, never the whole record.
+113. Bound repair rounds to two, then escalate the record.
+114. Use BM25 (`topk.py`) to pick passages before loading a long document.
+115. If the top passage score is low, say so and widen; do not guess.
+116. Replace old tool outputs with a one-line stub and keep the detail in a checkpoint file.
+117. Keep the last 4 to 6 turns verbatim when trimming history.
+118. Measure chars per token on your own data with `token_calibrate.py`.
+119. Count code, JSON and non-Latin text with their own ratios.
+120. Check the cache write premium before you cache.
+121. A prefix below the provider minimum is not cached at all; check the minimum.
+122. Cache lifetime is short: space your waves inside it.
+123. Warm the cache with one request before the fan-out, not after.
+124. Put fixed text first and changing text last, with a visible boundary.
+125. Never let a timestamp or request ID sit inside the cached prefix.
+126. Include model, prompt and sampling settings in a response cache key.
+127. Give cached answers a TTL, and never cache personal data.
+128. Use caching only where one sample is acceptable.
+129. Coalesce identical in-flight requests with single flight.
+130. Debounce typing-triggered calls; only the last one matters.
+131. Audit output tokens weekly: they are the dearest.
+132. Hidden reasoning is billed as output; cap it for easy tasks.
+133. A request that hits its output cap is both costly and probably broken; find those first.
+134. Find retries and loops with `waste_finder.py` before negotiating prices.
+135. Run `preflight.py` on prompts before long unattended jobs.
+136. Compute the cascade break-even before building a cascade.
+137. A cascade needs a deterministic validator; without one it is just a cheap model.
+138. Gate every downgrade with `eval_gate.py` and read the confidence interval, not the pass rate alone.
+139. Treat an inconclusive gate as a request for more test cases.
+140. Prune few-shot examples to the smallest set with the same coverage, then re-run the gate.
+141. Pick the cheapest service lane that still meets the deadline.
+142. Batch lanes suit work that nobody waits for.
+143. Compute the wiki break-even from your own numbers instead of a threshold.
+144. Compare TSV against JSON on your data; the saving can be small.
+145. Run the weekly audit as a workflow, and fix only the biggest finding.
+146. Make the cost gate a pull request check so regressions cannot merge.
+147. Use `--skip-stale` for the mid-ingest lint and a strict lint after `done`.
+148. Stage only wiki and brain folders in unattended jobs, never everything.
+149. Use `set -eo pipefail` in nightly scripts so a failed status is not read as zero pending.
+150. Compaction should keep error lines from the cut middle.
+151. Rotate sessions with caching in the maths: the saving is smaller than it looks.
+152. Probe one rung lower now and then so the ladder floor can fall.
+153. The check costs zero tokens; fixing what it finds costs what it costs. Say both.
+154. Ask several different models to review your own repository; keep only what you can verify.

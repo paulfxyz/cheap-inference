@@ -1,0 +1,150 @@
+{
+ "audit": {
+  "problems": [
+   {
+    "quote": "Every call to a language model is billed on tokens",
+    "issue": "Not for flat-rate plans, reserved capacity or self-hosting. Even on metered APIs, the example\u2019s 76,500 tokens/month is a volume estimate, not a bill: it assumes one load per session and omits price classes.",
+    "fix": "Count actual requests, not sessions. Reconcile fresh input, cache reads/writes, billable reasoning, output and fees against invoices; distinguish cash savings from freed capacity."
+   },
+   {
+    "quote": "Below roughly 50 to 100 sources, retrieval wins",
+    "issue": "Source count alone predicts neither cost nor answer quality. Five stable manuals queried hourly can justify synthesis; thousands of rarely queried files may not.",
+    "fix": "Measure ingest and refresh cost against query frequency times the measured per-query saving, at matched accuracy."
+   },
+   {
+    "quote": "The quote check (R6), which ties every claim to a source line.",
+    "issue": "A substring check covers recognised quotes, not unquoted claims, omitted qualifications or entailment. The planted failure also says nothing about model-reviewer miss rates.",
+    "fix": "Describe R6 as quote-presence checking. Test missing citations separately and sample claim\u2013passage pairs for support."
+   },
+   {
+    "quote": "python tools/kb.py lint` - repeat until it exits 0.",
+    "issue": "As documented, R7 flags a changed raw hash until `done` updates it, but `done` comes after lint. A correct page edit cannot clear that finding; an agent may pay to retry indefinitely.",
+    "fix": "Lint against a staged manifest and generated index, recheck the source hash, then publish together. Cap repair attempts and surface unresolved errors."
+   },
+   {
+    "quote": "pending=$(python3 tools/kb.py status 2>/dev/null | wc -l)",
+    "issue": "A status failure with empty stdout becomes a successful zero-line count; a broken nightly ingest looks like a quiet night.",
+    "fix": "Use `pending=$(python3 tools/kb.py status) || exit 1`, retain stderr, and skip inference only on successful empty output. Call that zero model spend, not zero job cost."
+   },
+   {
+    "quote": "Allow-list the exact commands (`python3 tools/kb.py *`, `git add *`, `git commit *`)",
+    "issue": "Those are wildcard patterns, not exact commands. Broad staging or `git add -A` can commit unrelated changes or secrets.",
+    "fix": "Use an isolated worktree and a trusted wrapper with fixed operations and validated paths. Inspect the staged diff before committing."
+   },
+   {
+    "quote": "climb one rung at a time",
+    "issue": "The rungs mix model capability, tool access and parallelism; they are not ordered by total cost or correctness. Repeated failed attempts can cost more than direct routing.",
+    "fix": "Compare cost per accepted result including fallback, latency and human review. Skip known-inadequate routes and periodically retest the learned floor."
+   },
+   {
+    "quote": "does every statement follow from its source?",
+    "issue": "The verifier diagram supplies summaries and claims, not original passages. Fresh context cannot recover a qualification omitted by a worker or guarantee independent judgement.",
+    "fix": "Give the verifier read access to cited spans plus surrounding context; check coverage against the task, not just support for retained claims. Include verification in fan-out pricing."
+   },
+   {
+    "quote": "f.write_text(json.dumps(result))",
+    "issue": "The cache can publish a partial file to concurrent readers. The example also lacks expiry and access scoping: identical text need not have the same authorised or current answer.",
+    "fix": "Cache only validated, reusable results; scope keys by access domain and dependency versions, enforce retention, and publish atomically."
+   },
+   {
+    "quote": "Independent reviews of small month-long trials report mixed results",
+    "issue": "No reviews or measurements are cited. Likewise, the supplied material indexes chapters 11\u201313 but omits their bodies and the tool/test sources; it cannot substantiate all receipts or establish novelty against those missing chapters.",
+    "fix": "Link dated trials and their workloads. Supply the missing chapters and a pinned, runnable revision; treat the extensions below as new relative to the visible material."
+   }
+  ],
+  "keep": [
+   "Measure, then spend effort where the money is.",
+   "Hash content, not timestamps.",
+   "No shared writes. Workers return text; one process writes files.",
+   "Never trim safety or compliance instructions to save tokens.",
+   "It checks structure and quotes, not truth."
+  ]
+ },
+ "techniques": [
+  {
+   "name": "Debounce superseded requests",
+   "saves": "For draft previews or live tagging, avoid launching inference on intermediate edits that nobody will consume.",
+   "risk": "Adds preview latency; dropping revisions is wrong for audit events, explicit submissions or tasks where every revision matters.",
+   "tool": {
+    "filename": "latest_only.py",
+    "algorithm": "Read JSONL draft events with tenant, document, monotone revision, timestamp and submit flag.\nKeep the newest pending revision per key; use a heap of quiet-period deadlines, ignoring obsolete timers.\nEmit one job at expiry or immediately on submit; tag results with revision so late previews cannot replace newer ones."
+   }
+  },
+  {
+   "name": "Coalesce concurrent misses",
+   "saves": "A completed-result cache still pays for simultaneous cold requests. Single-flight dispatch pays for one generation and delivers it to all waiters.",
+   "risk": "Sharing is wrong for independent samples, side effects or different permissions; a stalled leader delays its waiters.",
+   "tool": {
+    "filename": "singleflight.py",
+    "algorithm": "Read eligible requests; hash authorised scope, complete versioned request and generation settings. Bypass independent-sample requests.\nUnder a threading.Lock, map the key to one concurrent.futures.Future; only its creator submits inference outside the lock.\nDeliver the same result or error to waiting request IDs, bound waiter time, and remove the entry on completion."
+   }
+  },
+  {
+   "name": "Repair failed fields, not whole records",
+   "saves": "On a partially valid extraction, regenerate only rejected independent fields instead of paying for a full response again.",
+   "risk": "A valid-looking field can still be wrong; patching dependent fields separately can leave contradictory records.",
+   "tool": {
+    "filename": "field_retry.py",
+    "algorithm": "Read original evidence, output JSON, field validators and declared dependency groups; identify failing groups.\nEmit one patch request with allowed field paths, constraints and evidence for those groups; keep accepted values locally.\nMerge only allow-listed paths, rerun field and whole-record checks, and send unresolved records to review."
+   }
+  },
+  {
+   "name": "Generate changes instead of copying a document",
+   "saves": "For localised revisions, emit only replacement spans; Python reconstructs the full deliverable without billing unchanged text as output.",
+   "risk": "Poor fit for global rewrites. A stale base or ambiguous edit location can silently change the wrong passage.",
+   "tool": {
+    "filename": "apply_edits.py",
+    "algorithm": "Read a versioned document; emit its digest and numbered paragraphs as an edit contract for the model.\nAccept JSON edits keyed by original paragraph ranges; reject stale digest, overlaps, missing targets and out-of-bounds ranges.\nApply replacements in reverse order; emit reconstructed document and unified diff for acceptance checks."
+   }
+  },
+  {
+   "name": "Train a local classifier with abstention",
+   "saves": "For a stable, high-volume label taxonomy, a small supervised classifier can eliminate even cheap model calls on familiar cases.",
+   "risk": "Rare labels, changing vocabulary and biased training labels hurt accuracy; a high score alone is not evidence of correctness.",
+   "tool": {
+    "filename": "local_labels.py",
+    "algorithm": "Read labelled JSONL split by time into train, calibration and test sets; fit smoothed multinomial naive Bayes with re, collections.Counter and math.log.\nOn calibration data choose per-label score-margin thresholds meeting a precision target with minimum support; disable unsupported labels and independently test.\nFor each new text emit a local label or abstain to the existing model on low margin or low vocabulary coverage; log decisions for sampled review."
+   }
+  }
+ ],
+ "workflows": [
+  {
+   "name": "Latest-revision draft previews",
+   "steps": [
+    "Replay timestamped edit bursts to choose a quiet period within the preview latency target.",
+    "Debounce per authorised document; bypass the timer on explicit submit.",
+    "Coalesce identical eligible in-flight jobs and display only the current revision.",
+    "Compare billed calls per completed document, stale displays and p95 preview latency against immediate dispatch."
+   ],
+   "tools": [
+    "latest_only.py",
+    "singleflight.py"
+   ]
+  },
+  {
+   "name": "Patch-only document maintenance",
+   "steps": [
+    "Snapshot the source and define which sections may change.",
+    "Request anchored replacements rather than a rewritten document.",
+    "Reject stale or overlapping patches; reconstruct locally and review the diff against the requested change.",
+    "Compare output spend per accepted revision, including rejected patches and full-rewrite fallbacks."
+   ],
+   "tools": [
+    "apply_edits.py"
+   ]
+  },
+  {
+   "name": "Selective ticket triage and extraction",
+   "steps": [
+    "Train and test the local labeler on historical tickets; keep sensitive categories on mandatory review.",
+    "Serve supported labels locally, send abstentions for model classification, then request only the extraction required for the chosen category.",
+    "Patch invalid independent fields once; route remaining failures to review.",
+    "Blind-audit local accepts as well as fallbacks. Disable a label if precision drops; track total spend per correctly completed ticket."
+   ],
+   "tools": [
+    "local_labels.py",
+    "field_retry.py"
+   ]
+  }
+ ]
+}

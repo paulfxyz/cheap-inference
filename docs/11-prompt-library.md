@@ -289,3 +289,74 @@ Max 20 words.
 2. Keep a before/after token count in the commit message.
 3. Test on 5 real inputs, not one. A prompt that is short and wrong is not cheap.
 4. Keep the version in the file name or a comment; changing a prompt invalidates cached results.
+
+## 11.12 Added in 2.1.0 (43-54)
+
+**P43. Patch, not rewrite**
+```text
+Return only SEARCH/REPLACE blocks. Each SEARCH block must quote the existing
+lines exactly. Do not repeat unchanged code.
+```
+
+**P44. Batch items with IDs**
+```text
+For each item below return one line: ID<TAB>label. Skip items you cannot
+label and write ID<TAB>?. No explanations.
+```
+
+**P45. Repair only these fields**
+```text
+Below are records with invalid fields only. Return JSON: {id: {field: value}}.
+Do not return fields that are not listed.
+```
+
+**P46. Decide, then stop**
+```text
+Answer in one line, then stop. If you need more input, ask one question.
+```
+
+**P47. Quote-bounded answer**
+```text
+Answer using only the passages below. After each claim give the passage number.
+If no passage supports it, say "not in the passages".
+```
+
+**P48. Output budget**
+```text
+Maximum 120 words. No introduction, no recap, no closing offer.
+```
+
+**P49. Reasoning budget**
+```text
+Think briefly. Do not enumerate alternatives you reject. Give the answer first.
+```
+
+**P50. Checkpoint**
+```text
+Summarise the work so far as: decisions made | open questions | next step |
+files touched. Max 12 lines. This replaces the history.
+```
+
+**P51. Tool diet review**
+```text
+Here are my tool descriptions. Rewrite each to at most 20 words that still
+tell you when to call it. Keep the parameter names unchanged.
+```
+
+**P52. Example selection**
+```text
+From these 10 examples choose the 3 that together cover the most different
+cases. Say which case each one covers.
+```
+
+**P53. Escalation note**
+```text
+You could not finish. In 5 lines say what you tried, what blocked you, and the
+smallest extra input that would let a cheaper retry succeed.
+```
+
+**P54. Cache-friendly layout**
+```text
+Rewrite this prompt so the fixed text comes first and the changing text comes
+last, with one clear boundary line between them. Do not change the wording.
+```

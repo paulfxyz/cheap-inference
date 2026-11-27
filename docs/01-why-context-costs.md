@@ -12,7 +12,7 @@ Every call to a language model is billed on tokens, and they come in three kinds
 | Cached input | A repeated prefix that the provider can reuse (if it supports prompt caching) | Usually a fraction of the input price |
 | Output | What the model writes back | Usually the most expensive per token |
 
-Prices differ per provider and change often, so this repository never hard-codes them. The `costcalc.py` tool takes a price table you fill in yourself.
+Prices differ per provider and change often, so this repository never hard-codes them. Two caveats up front: on flat-rate plans, reserved capacity or self-hosted models, tokens are not billed one by one (the same ideas still save latency and capacity), and some providers charge MORE than the normal input price to write a prefix into the cache, with a time-to-live and a minimum prefix size (chapter 8). The `costcalc.py` tool takes a price table you fill in yourself.
 
 ## 1.2 The multiplication problem
 
@@ -27,7 +27,7 @@ cost of a session  =  static context  x  number of requests
 
 Two consequences follow:
 
-1. A small, always-loaded file is expensive in aggregate. A 2,000-token guide loaded in 500 sessions is 1,000,000 tokens of pure overhead. See `tools/budget.py`.
+1. A small, always-loaded file is expensive in aggregate. A 2,000-token guide loaded in 500 sessions is 1,000,000 tokens of pure overhead, and agent sessions send it on EVERY request, not once per session (set `requests_per_session` in the budget file). Tool and function schemas ride along too: weigh them with `tools/schema_diet.py`. See `tools/budget.py`.
 2. Conversation history grows. In a long agent session, each new turn re-sends the earlier turns. Cost per turn rises even if each question is short. Starting fresh sessions for unrelated work is a real saving, not a nicety.
 
 ## 1.3 Where the hidden cost usually is
@@ -69,4 +69,4 @@ If the second number is small compared with your real work, stop optimising load
 
 ## 1.5 A note on honesty
 
-Token counts in this repository are estimates (characters divided by four, or words times 1.33). Real tokenizers differ, and code, JSON and non-Latin scripts usually take more tokens per character than English prose. Treat the numbers as good for ranking and for setting limits, and use your provider's own counter when you need an exact figure.
+Token counts in this repository are estimates. `tokens.py` now detects the kind of text (prose, code, JSON, CJK) and applies a different characters-per-token ratio, because chars/4 can under-count code, JSON and non-Latin scripts by a factor of two or more. Those ratios are still starting guesses: run `tools/token_calibrate.py` on a sample of your own requests (your provider reports real token counts) and pass the result with `--calibration`. Use your provider's own counter when you need an exact figure.

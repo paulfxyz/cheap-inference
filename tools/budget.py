@@ -69,6 +69,11 @@ def audit(budget: dict, base: pathlib.Path) -> dict:
 
     total_limit = budget.get("total_limit_tokens")
     sessions = budget.get("sessions_per_month", 0)
+    # Always-loaded text is re-sent on EVERY request, not once per session. Agent sessions make many
+    # requests, so the real multiplier is sessions x requests per session (default 1 keeps the old maths).
+    requests = budget.get("requests_per_session", 1)
+    # Tool/function schemas are also sent every request; count them (see tools/schema_diet.py).
+    total += budget.get("tool_schema_tokens", 0)
     return {
         "rows": rows,
         "total_tokens": total,
@@ -76,7 +81,8 @@ def audit(budget: dict, base: pathlib.Path) -> dict:
         "total_status": "OVER" if (total_limit is not None and total > total_limit) else "ok",
         # The number that actually matters: tokens re-sent every month just to
         # load static context, before any real work happens.
-        "monthly_loading_tokens": total * sessions,
+        "monthly_loading_tokens": total * sessions * requests,
+        "requests_per_session": requests,
         "sessions_per_month": sessions,
     }
 
@@ -94,7 +100,7 @@ def main(argv: list[str] | None = None) -> int:
         lim = "-" if r["limit"] is None else r["limit"]
         print(f"{r['status']:<8} {r['path']:<40} {r['tokens']:>7} / {lim}")
     print(f"{report['total_status']:<8} {'TOTAL':<40} {report['total_tokens']:>7} / {report['total_limit']}")
-    print(f"Loading cost: ~{report['monthly_loading_tokens']:,} tokens/month over {report['sessions_per_month']} sessions")
+    print(f"Loading cost: ~{report['monthly_loading_tokens']:,} tokens/month over {report['sessions_per_month']} sessions x {report['requests_per_session']} request(s)")
 
     # Exit code 2 = something is over budget; CI and pre-commit hooks key off this.
     bad = report["total_status"] == "OVER" or any(r["status"] in ("OVER", "MISSING") for r in report["rows"])

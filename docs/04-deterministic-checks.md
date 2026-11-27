@@ -4,7 +4,7 @@
 
 ## 4.1 Why a model should not check its own work
 
-A model asked to "check the wiki for errors" will often pass a false statement that sounds plausible, because the same biases that produced it also judge it. A script has no such bias. It is also cheaper by orders of magnitude: a lint over a thousand pages finishes in milliseconds and uses no tokens.
+A model asked to "check the wiki for errors" will often pass a false statement that sounds plausible, because the same biases that produced it also judge it. A script has no such bias. It is also cheaper by orders of magnitude: a lint over a small vault finishes well under a second and uses no tokens (larger vaults take longer; this has not been benchmarked).
 
 The demonstration is in this repository. `examples/broken-kb` contains a planted false sentence. Run:
 
@@ -37,7 +37,9 @@ A model reviewer might have let it through. The script cannot.
 
 ## 4.3 What the linter cannot do
 
-It checks structure and quotes, not truth. If a raw source is wrong, the wiki will faithfully repeat it, and every quote will pass. Controls that remain human:
+It checks structure and quotes, not truth. Be precise about what the quote rule (R6) proves: that a string exists in a source file. It does not prove the claim is entailed by that string, that the quote is in context, that a real quote is not attached to an unrelated claim, or that unquoted claims are supported. It narrows the space for fabrication; a semantic reviewer (or a person) still covers the rest. Quotes are compared after normalising whitespace, curly quotes and dashes, so typography never causes a false alarm.
+
+Also note the honest cost of the hook loop: the linter itself is free, but when its error text is fed back to the model, the model spends tokens fixing it. "Zero tokens" describes the check, not the repair. If a raw source is wrong, the wiki will faithfully repeat it, and every quote will pass. Controls that remain human:
 
 - Decide what enters `raw/`. Treat web clippings as untrusted text from strangers.
 - Keep `raw/` read-only to the model (see 4.5).
@@ -75,7 +77,7 @@ These follow the same pattern and are easy extensions of `tools/kb.py`:
 1. **Duplicate detection** with `tools/dedup.py` (shingles and Jaccard similarity).
 2. **Staleness** with `kb.py stale --days 90`: pages whose `updated` date is old.
 3. **Size budgets** with `tools/budget.py` for always-loaded files.
-4. **Link rot** for external URLs: a script that issues HEAD requests on a schedule.
+4. **Link rot** for external URLs: a script that issues HEAD requests on a schedule. (That one needs the network, so it is deliberately NOT in `tools/`; the tools stay offline and a test enforces it.)
 5. **Glossary consistency**: a list of preferred terms, flagging banned variants.
 6. **Date and number drift**: regular expressions for figures that must match a single source of truth.
 

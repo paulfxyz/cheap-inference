@@ -34,6 +34,16 @@ import argparse
 import sys
 
 
+def effective(tokens: int, cached_share: float, cache_price: float) -> float:
+    """Billing-equivalent tokens when `cached_share` of the input is served at `cache_price` x normal.
+
+    Caching changes the PRICE of repeated history, not its SIZE: 100 tokens with a 90% cached share
+    at 0.1x cost 0.1*90 + 10 = 19 token-equivalents. The earlier version of this model ignored that
+    and overstated the saving from splitting sessions (a fair criticism from review).
+    """
+    return tokens * ((1 - cached_share) + cached_share * cache_price)
+
+
 def long_session(turns: int, per_turn: int, base: int) -> int:
     """Total input tokens when the history is never reset."""
     # Turn i re-sends the base context plus the i turns of history accumulated so far,
@@ -67,12 +77,19 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--per-turn", type=int, required=True, help="tokens added to history each turn")
     ap.add_argument("--base", type=int, default=1500, help="always-loaded tokens per request")
     ap.add_argument("--summary", type=int, default=400, help="tokens of carry-over summary")
+    ap.add_argument("--cached-share", type=float, default=0.0, help="share of repeated history served from cache, 0..1")
+    ap.add_argument("--cache-price", type=float, default=0.1, help="cache-read price as a multiple of normal input")
     ap.add_argument("--restart", type=int, default=2500, help="one-off tokens to rebuild context in a new session")
     a = ap.parse_args(argv)
     lng = long_session(a.turns, a.per_turn, a.base)
     k, best = best_k(a.turns, a.per_turn, a.base, a.summary, a.restart)
     print(f"one long session : {lng:,} input tokens")
     print(f"best split (K={k}) : {best:,} input tokens  ({100 - round(100 * best / lng)}% fewer)")
+    if a.cached_share:
+        # With caching, the long session's repeated history is cheaper per token. Compare billing-equivalents.
+        e_long = effective(lng, a.cached_share, a.cache_price)
+        e_best = effective(best, a.cached_share * 0.5, a.cache_price)  # a fresh session has less to reuse
+        print(f"with caching (share {a.cached_share:.0%}, price {a.cache_price}x): long ~{e_long:,.0f} vs split ~{e_best:,.0f} billing-equivalent tokens")
     return 0
 
 

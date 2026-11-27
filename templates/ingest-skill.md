@@ -8,6 +8,6 @@ disable-model-invocation: true
 3. Frontmatter on every page: title, sources, updated (YYYY-MM-DD).
 4. Every concrete claim gets a quote line:  > "exact text" - raw/<file>
 5. Link related pages with [[page-name]]. No orphans.
-6. Run `python tools/kb.py lint` until it exits 0.
-7. Run `python tools/kb.py done <raw file> <pages...>` then `python tools/kb.py index`.
-8. Commit: `git add -A && git commit -m "ingest <source>"`.
+6. Run `python tools/kb.py lint --skip-stale` until it exits 0 (R7 cannot pass until `done` records the new hash).
+7. Run `python tools/kb.py done <raw file> <pages...>` then `python tools/kb.py index`, then a strict `python tools/kb.py lint`.
+8. Commit: `git add wiki/ .brain/ && git commit -m "ingest <source>"`.

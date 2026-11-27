@@ -1,0 +1,428 @@
+{
+ "audit": {
+  "problems": [
+   {
+    "quote": "Cached input | A repeated prefix that the provider can reuse ... Usually a fraction of the input price",
+    "issue": "Omits that some providers charge a premium for cache writes, and that caches have short TTLs and minimum prefix sizes. A prefix that is written but rarely re-read can cost more than no caching. costcalc's single --cache-hit rate cannot model this.",
+    "fix": "Add a cache-write price, TTL and minimum prefix to the cost model; compute the break-even number of reads per write."
+   },
+   {
+    "quote": "Loading cost: ~76,500 tokens/month over 300 sessions",
+    "issue": "Multiplies by sessions, while chapter 1 itself says static context is multiplied by number of requests. Agent sessions make many calls, each re-sending the guide, so this understates by the calls-per-session factor (partly offset by caching). Tool definitions and MCP schemas, often the largest always-loaded block, are not counted.",
+    "fix": "Multiply by requests per session, show cached and uncached figures, and include tool schemas in the budget."
+   },
+   {
+    "quote": "one long session : 1,371,000 input tokens / best split (K=3) : 244,300 input tokens (82% fewer)",
+    "issue": "The figures do not reconcile with the stated inputs: 60 turns at 700 tokens re-sent each turn gives about 1.28M, so there are hidden parameters. K=3 as 'best' is also odd since more splits always lower a pure quadratic unless there is an undisclosed per-split cost. Ignoring caching is called a 'worst case' but it flatters splitting: with prefix caching, history is cheap and a fresh session pays cold-cache and re-explanation costs.",
+    "fix": "Print all parameters and the formula, add cached-read price and a re-priming cost per split, and stop headlining 82%."
+   },
+   {
+    "quote": "Every claim below has a command that checks it.",
+    "issue": "Several receipts do not test the claim. Receipt 2 shows a script catches a planted quote, not that a model reviewer misses it ('more often than you would think' is unmeasured). Receipt 4 is a toy with made-up segments. Receipt 8 ('probably contains filler') is not falsifiable.",
+    "fix": "Label these as demonstrations, or ship a small recorded eval for the model-reviewer claim."
+   },
+   {
+    "quote": "Every number below comes from a tool you can run.",
+    "issue": "The walkthrough contains narrative numbers (400 strings, 72% share from a sample log, 300 sessions as an assumed input) that are illustrative, not measured.",
+    "fix": "Say 'illustrative inputs, tool-computed outputs'."
+   },
+   {
+    "quote": "Read `tools/*.py`; grep for `import requests` or `http` returns nothing.",
+    "issue": "Weak proof of no network use: urllib, socket or subprocess would not match. Chapter 4 also suggests a link-rot checker issuing HEAD requests, which is network code.",
+    "fix": "Enforce with a CI test that parses imports against an allow-list, and scope the claim to the shipped tools."
+   },
+   {
+    "quote": "The linter, budget checker, deduplicator, router, log compactor and cache simulator never call a model.",
+    "issue": "True but overstated as a saving: the lint hook's stderr is fed back to the model and the 'lint until it passes' loop consumes tokens every iteration. The 'Tokens spent on checks: 0' badge hides this.",
+    "fix": "State that the check is free but its feedback is not; cap lint-fix iterations and keep messages terse."
+   },
+   {
+    "quote": "Quoted claims appear verbatim in the cited source | Invented or distorted facts",
+    "issue": "The check only proves the quoted string exists. It does not catch a real quote attached to an unsupported claim, out-of-context or truncated quotes (a dropped 'not'), or claims with no quote line at all. Exact matching will also raise false positives on whitespace, smart quotes and hyphenation.",
+    "fix": "Narrow the claim to 'invented quotes'; normalise text before matching; add a rule requiring a quote per hard claim and a minimum quote length."
+   },
+   {
+    "quote": "A script has no such bias.",
+    "issue": "Implies the script substitutes for review. It covers a different, narrower class of error than a semantic reviewer.",
+    "fix": "Present it as complementary: script for existence, fresh-context verifier for entailment."
+   },
+   {
+    "quote": "a lint over a thousand pages finishes in milliseconds",
+    "issue": "Unlikely for Python reading and hashing a thousand pages plus their sources; seconds is more realistic. Not benchmarked.",
+    "fix": "Say 'seconds, zero tokens', or publish a benchmark."
+   },
+   {
+    "quote": "Retrieval rediscovers knowledge on every question. A maintained wiki pays for synthesis once, at ingest.",
+    "issue": "Overstated dichotomy. Retrieval is cheap per query and can run over summaries; the wiki has continuing costs (5 to 15 page updates per source, lint loops, drift, staleness). Chapter 9 itself concedes trial results were 'roughly a wash'.",
+    "fix": "Present as a trade-off driven by query volume per source and source change rate, with a break-even calculation."
+   },
+   {
+    "quote": "Below roughly 50 to 100 sources a wiki is not worth building.",
+    "issue": "An unsourced threshold in a repo that promises 'never inventing numbers'. The crossover depends on source size, query frequency and churn, not source count alone.",
+    "fix": "Mark it as a heuristic and replace with a calculator over those inputs."
+   },
+   {
+    "quote": "Independent reviews of small month-long trials report mixed results",
+    "issue": "Uncited, in a chapter that tells readers to verify claims before relying on them.",
+    "fix": "Cite or remove."
+   },
+   {
+    "quote": "Three small reads beat one large one.",
+    "issue": "Not generally true. Each read is a tool round trip that re-sends the whole context and adds output tokens and latency. With a cached prefix, one moderate read can be cheaper than three hops.",
+    "fix": "Qualify: only when the single read is much larger than the combined hops plus per-call overhead."
+   },
+   {
+    "quote": "Do NOT read the knowledge base for general questions",
+    "issue": "Framed as free ('the common case costs nothing'). The risk is under-retrieval: the model answers from general knowledge when a project-specific answer exists. The hot cache is still loaded anyway.",
+    "fix": "Add a counter-rule (read when the question mentions project names, decisions or people) and test on a sample of questions."
+   },
+   {
+    "quote": "Suggested starting limits: guide 700 tokens, hot cache 250, total always-loaded 1,500.",
+    "issue": "Arbitrary numbers presented as defaults, and inconsistent with 'about a dozen lines' for the hot cache versus the lint cap of 25 lines. With prefix caching the marginal cost of a stable guide is small, so over-trimming may hurt quality more than it saves.",
+    "fix": "Derive limits from measured monthly cost and cache rate; reconcile the hot-cache figures."
+   },
+   {
+    "quote": "Token counts are estimates (characters / 4, words x 1.33).",
+    "issue": "Budgets and CI exit codes are built on a heuristic that can be off by a large margin for code, JSON and non-Latin text. The optional tiktoken count is also not exact for non-OpenAI models.",
+    "fix": "Add a safety margin or per-content-type ratios, and calibrate against the provider's reported usage."
+   },
+   {
+    "quote": "Hard length limit on the return, such as 80 words.",
+    "issue": "Fan-out with three-line or 80-word summaries of a whole source is lossy; one claim per source drops most content, and the verifier sees only summaries so it cannot detect omissions. The cost comparison also ignores that each worker pays its own system prompt and tool overhead, and that the alternative is not necessarily 40 documents in the main thread.",
+    "fix": "Scale the return size to the source, allow multiple claims, and compare total worker cost against a cached single-context baseline."
+   },
+   {
+    "quote": "A fresh context has not seen the reasoning that produced the claims, so it does not inherit the same blind spots.",
+    "issue": "Overstated if the verifier is the same model: it shares training biases. A fresh context removes anchoring, not model-level error.",
+    "fix": "Say 'reduces anchoring'; use a different model or give the verifier the source passages for high-stakes checks."
+   },
+   {
+    "quote": "climb one rung at a time, and only when you can say what failed",
+    "issue": "Escalation is not free: each failed rung is paid for, plus latency and the cost of detecting failure. For tasks that often fail low, starting higher is cheaper. Detection relies on user feedback, so silent wrong answers never escalate.",
+    "fix": "Add an expected-cost rule using per-rung pass rates, and require an automatic validator as the escalation trigger."
+   },
+   {
+    "quote": "Learns the lowest rung that worked for each task kind and makes it the floor",
+    "issue": "'Worked' is defined by acceptance, which is a weak signal; one lucky success can lock a task kind onto a rung that is too low. It also conflicts with the chapter 6 rule to keep an upgrade once made.",
+    "fix": "Require a minimum sample and pass rate, and re-test periodically."
+   },
+   {
+    "quote": "rung 0: no escalation signal; answer inline",
+    "issue": "A keyword router is brittle: a hard question without trigger words routes to rung 0, and trigger words in an easy one over-escalate. No accuracy figure is given.",
+    "fix": "Describe it as a default with override, and ship a labelled test set with the misroute rate."
+   },
+   {
+    "quote": "Rung 5 is a premium model.",
+    "issue": "The ladder mixes two separate axes, orchestration depth (tools, agents, fan-out) and model tier. A premium model with no tools can be cheaper than rung 4 fan-out on a cheap one.",
+    "fix": "Split into two dimensions, or state that the rungs are not strictly ordered by cost."
+   },
+   {
+    "quote": "Combine related small questions into one structured request.",
+    "issue": "Missing caveats: quality can degrade with many items per call, one failure forces a full retry, and it can reduce result-cache reuse.",
+    "fix": "Recommend a tested batch size with per-item validation and partial retry."
+   },
+   {
+    "quote": "Ask for a structured format (a table, JSON) when you will process the result with code; it is shorter and cheaper to parse.",
+    "issue": "JSON is often not shorter in tokens: keys, quotes and braces repeat. Strict formats can also reduce reasoning quality on some tasks.",
+    "fix": "Say 'easier to parse'; for token savings prefer compact formats such as TSV or short keys."
+   },
+   {
+    "quote": "If a deterministic input gives a deterministic output",
+    "issue": "Model outputs are not deterministic, so the cache freezes one sample, including a bad one. The key omits sampling parameters, and model aliases can change silently. The snippet is also not safe under concurrent writes.",
+    "fix": "Key on pinned model version, parameters and prompt hash; cache only validated outputs; write atomically."
+   },
+   {
+    "quote": "Does this work with any model or agent tool? Yes.",
+    "issue": "Overstated. Hooks, exit code 2 feedback, @imports and permission settings are specific to certain agent tools.",
+    "fix": "Say the tools are portable and the templates are tool-specific."
+   },
+   {
+    "quote": "Compacting a log removes most of its characters without losing the failure.",
+    "issue": "Not guaranteed: head/tail truncation and line collapsing can remove a mid-log root cause or lines that differ only by an ID.",
+    "fix": "Always keep lines matching error patterns with surrounding context, and state the limitation."
+   },
+   {
+    "quote": "Output | Usually the most expensive per token",
+    "issue": "True per token, but the guide never mentions reasoning or thinking tokens, which are billed as output and often dominate. It also risks misdirecting effort, since input usually dominates total spend in agent workloads.",
+    "fix": "Add reasoning tokens as a billed kind and tell readers to check the input/output split first."
+   },
+   {
+    "quote": "Everything is tested.",
+    "issue": "30 tests across 13 tools is thin coverage, and 'every tool has tests' is not the same as everything being tested.",
+    "fix": "Report coverage or soften the wording."
+   },
+   {
+    "quote": "updated: 2026-11-20",
+    "issue": "Example dates are in the future, which the repo's own rule R10 (non-future date) would reject depending on when it runs.",
+    "fix": "Use clearly past dates in examples."
+   }
+  ],
+  "keep": [
+   "Hash-based incremental ingest with a manifest, and a shell guard that exits before any model call when nothing changed.",
+   "Stable-first prompt ordering for prefix caching: no timestamps or IDs at the top, fixed tool and example order.",
+   "Enforce with permissions and sandboxing rather than prompts ('keys, not prompts'), and treat source text as data, never instructions.",
+   "Shipping no hard-coded prices and no promised percentage saving; measure with a usage report before and after.",
+   "Use deterministic code for anything code can check (links, quotes exist, sizes, dates), with explicit exit codes as an interface."
+  ]
+ },
+ "techniques": [
+  {
+   "name": "Tool-schema diet",
+   "saves": "Tool and MCP definitions are sent on every request and are often larger than the guide. Removing unused tools and shortening descriptions cuts input on every call.",
+   "risk": "The model may lack a tool it occasionally needs, or misuse one whose description was cut too far.",
+   "tool": {
+    "filename": "tool_schema_diet.py",
+    "algorithm": "Input: tools JSON file and a usage log JSONL with tool-call names. Estimate tokens per tool definition (chars/4). Count calls per tool from the log. Output a table of tokens, calls and tokens-per-call, flagging never-used tools and descriptions over a length limit. Print the per-request saving if flagged tools are removed."
+   }
+  },
+  {
+   "name": "Model cascade with validator gate",
+   "saves": "Most items pass on the cheap model; only validator failures are re-run on a stronger one, so the average price approaches the cheap rate.",
+   "risk": "A weak validator passes wrong cheap answers. If the cheap pass rate is low you pay twice.",
+   "tool": {
+    "filename": "cascade_sim.py",
+    "algorithm": "Input: per-tier price, measured pass rate per tier, and validator false-pass rate. Compute expected cost per item as the sum of tier costs weighted by the probability of reaching each tier. Compute expected undetected-error rate. Output the comparison against going straight to the top tier and the break-even pass rate."
+   }
+  },
+  {
+   "name": "Cache-write break-even check",
+   "saves": "Avoids paying a cache-write premium on prefixes that are not re-read within the TTL, and identifies prefixes that should be cached but are not.",
+   "risk": "Little quality risk; the risk is wrong inputs (TTL, minimum size) leading to a bad decision.",
+   "tool": {
+    "filename": "cache_breakeven.py",
+    "algorithm": "Input: prefix tokens, base input price, write multiplier, read multiplier, TTL, and a list of request timestamps. Walk the timestamps, counting a write when the gap exceeds the TTL and a read otherwise. Compute cost with and without caching. Output the saving or loss and the minimum reads-per-write to break even."
+   }
+  },
+  {
+   "name": "Output-token audit and caps",
+   "saves": "Output is the dearest token. Finding tasks with long outputs, hitting the cap, or echoing the input lets you set max_tokens, stop sequences and terse formats.",
+   "risk": "Caps set too low truncate answers or break JSON.",
+   "tool": {
+    "filename": "output_audit.py",
+    "algorithm": "Input: usage log JSONL with task, output tokens and finish reason. Group by task; compute median and 95th percentile output tokens and the share of truncated calls. Suggest a cap at roughly the 95th percentile plus margin. Flag tasks where output cost exceeds input cost."
+   }
+  },
+  {
+   "name": "Diff-only edits",
+   "saves": "Asking for a patch or search-and-replace blocks instead of the full rewritten file cuts output tokens roughly in proportion to file size over change size.",
+   "risk": "Patches may fail to apply; weaker models produce malformed diffs.",
+   "tool": {
+    "filename": "apply_edits.py",
+    "algorithm": "Input: a file and a model reply containing SEARCH/REPLACE blocks. Parse the blocks with a regex. For each, require exactly one match of the search text, then replace. Exit 2 with a short message if a block matches zero or multiple times so the model can retry that block only. Print tokens saved versus a full rewrite."
+   }
+  },
+  {
+   "name": "Code-first prefilter",
+   "saves": "Rules, regexes and lookup tables resolve the easy share of classification or extraction items at zero cost; only the remainder goes to a model.",
+   "risk": "Rules that are too broad silently misclassify. Needs a sampled accuracy check.",
+   "tool": {
+    "filename": "prefilter.py",
+    "algorithm": "Input: items JSONL and a rules JSON of pattern-to-label pairs. Apply rules in order; an item matched by exactly one rule is resolved, conflicts and no-matches are left for the model. Write resolved and remaining files. Print the resolved share and a random sample for human spot-check."
+   }
+  },
+  {
+   "name": "Exact-duplicate collapse before batch",
+   "saves": "Bulk jobs often contain repeated inputs (same string, same ticket text). Processing each unique input once and fanning results back removes duplicate calls.",
+   "risk": "Over-aggressive normalisation merges inputs that should differ, such as case-sensitive strings.",
+   "tool": {
+    "filename": "batch_dedup.py",
+    "algorithm": "Input: items JSONL with id and text. Normalise (strip, collapse whitespace, optional lower-case) and hash. Write one representative per hash plus a map of hash to ids. A second mode takes results for representatives and expands them back to all ids. Print the duplicate share."
+   }
+  },
+  {
+   "name": "Lexical top-k passage selection",
+   "saves": "Sends only the most relevant passages of a long document instead of the whole thing, with no embedding cost.",
+   "risk": "Lexical matching misses paraphrases, so the answer-bearing passage can be dropped.",
+   "tool": {
+    "filename": "bm25_select.py",
+    "algorithm": "Input: a query, a document or folder, and a token budget. Split into paragraphs, tokenise with a regex, compute BM25 scores using collections.Counter and document frequencies. Take passages in score order until the budget is reached, then output them in original order with source line numbers. Print the share of tokens kept."
+   }
+  },
+  {
+   "name": "History trimming of stale tool results",
+   "saves": "In long agent sessions old tool outputs are re-sent every turn. Replacing old results with a one-line stub cuts per-turn input.",
+   "risk": "The model may need a detail that was stubbed out. Editing earlier turns also breaks the prompt cache from that point.",
+   "tool": {
+    "filename": "history_trim.py",
+    "algorithm": "Input: a transcript JSON list of messages, a keep-last-N setting and a size threshold. For tool-result messages older than N turns and above the threshold, replace the body with a stub giving tool name, size and first line. Report tokens before and after, and the earliest edited position so the user can weigh cache loss against the saving."
+   }
+  },
+  {
+   "name": "Micro-batch sizing with partial retry",
+   "saves": "Packing several items per call amortises the instruction prefix; choosing the size from measured failure rates avoids both overhead and full-batch retries.",
+   "risk": "Larger batches lower per-item accuracy and can cause skipped or merged items.",
+   "tool": {
+    "filename": "pack_items.py",
+    "algorithm": "Input: items JSONL, instruction token count, item token estimates, a context budget and a per-item failure rate. Greedily pack items with numbered ids up to the budget. Compute expected cost per item for several batch sizes including retry of failed items only. Output the packed batches and the cheapest size."
+   }
+  },
+  {
+   "name": "Few-shot example pruning",
+   "saves": "Few-shot examples are paid on every call. Dropping examples that do not change eval results shrinks the prompt permanently.",
+   "risk": "The eval set may not cover rare cases the dropped examples protected.",
+   "tool": {
+    "filename": "fewshot_ablate.py",
+    "algorithm": "Input: a prompt file with delimited examples and an output directory. Generate one variant per removed example plus a zero-example variant, with token counts. A second mode reads a CSV of variant id and eval score supplied by the user and lists examples whose removal costs no score, with tokens saved per call."
+   }
+  },
+  {
+   "name": "Reasoning-effort audit",
+   "saves": "Thinking tokens are billed as output. Finding tasks where reasoning tokens dwarf visible output, on simple work, lets you lower effort or disable it there.",
+   "risk": "Lower effort hurts multi-step or ambiguous tasks.",
+   "tool": {
+    "filename": "reasoning_audit.py",
+    "algorithm": "Input: usage log JSONL with task, reasoning tokens and output tokens. Group by task and compute the reasoning share of billed output and its cost using a supplied price. Rank tasks by reasoning spend. Flag tasks with high reasoning share and short answers as candidates for a lower setting, to be confirmed by an eval."
+   }
+  },
+  {
+   "name": "Retry and loop waste finder",
+   "saves": "Failed calls, repeated identical requests and agent loops are pure waste. Identifying them points to fixes such as validation before send, backoff, and loop caps.",
+   "risk": "None to quality; false positives on legitimate repeats.",
+   "tool": {
+    "filename": "retry_waste.py",
+    "algorithm": "Input: usage log JSONL with session id, request hash or prompt text, status and tokens. Hash each prompt. Count repeats of the same hash within a session and calls with error or truncated status. Sum the tokens spent on them. Output the waste share by task and the worst sessions."
+   }
+  },
+  {
+   "name": "Minimal eval gate for every cost change",
+   "saves": "Not a direct saving, but it lets you adopt cheaper models, shorter prompts and lower caps with evidence, and stops false savings that cause rework.",
+   "risk": "A small or unrepresentative golden set gives false confidence.",
+   "tool": {
+    "filename": "eval_gate.py",
+    "algorithm": "Input: golden JSONL with id and expected value or regex, and two result files (baseline and candidate) with id, output and tokens. Score each by exact match, regex or required-keys check. Print pass rate and total cost for both. Exit 2 if the candidate's pass rate drops by more than a set tolerance."
+   }
+  }
+ ],
+ "workflows": [
+  {
+   "name": "Safe model downgrade",
+   "steps": [
+    "Collect 50 to 200 real inputs with accepted outputs into a golden file.",
+    "Run the current model and the cheaper candidate on the set.",
+    "Score both with eval_gate.py; stop if the candidate fails the tolerance.",
+    "Use cascade_sim.py to decide between a full switch and a cascade with fallback.",
+    "Roll out to a share of traffic and compare the usage report before and after."
+   ],
+   "tools": [
+    "eval_gate.py",
+    "cascade_sim.py",
+    "usage_report.py",
+    "costcalc.py"
+   ]
+  },
+  {
+   "name": "Bulk classification or extraction at minimum cost",
+   "steps": [
+    "Collapse duplicate inputs with batch_dedup.py.",
+    "Resolve the easy share with prefilter.py and spot-check a sample.",
+    "Pack the remainder with pack_items.py at the cheapest tested batch size.",
+    "Send through the provider's batch endpoint on the cheap model.",
+    "Validate each item with code; re-run only failures on a stronger model.",
+    "Expand results back to all original ids."
+   ],
+   "tools": [
+    "batch_dedup.py",
+    "prefilter.py",
+    "pack_items.py",
+    "cascade_sim.py",
+    "costcalc.py"
+   ]
+  },
+  {
+   "name": "Always-sent payload audit including tools",
+   "steps": [
+    "Export one real request payload (system prompt, tools, examples).",
+    "Run tool_schema_diet.py against a recent usage log and remove or defer unused tools.",
+    "Run prompt_lint.py and fewshot_ablate.py on the system prompt.",
+    "Confirm quality with eval_gate.py.",
+    "Re-order so the remaining stable blocks come first, then check cache_breakeven.py."
+   ],
+   "tools": [
+    "tool_schema_diet.py",
+    "fewshot_ablate.py",
+    "prompt_lint.py",
+    "eval_gate.py",
+    "cache_breakeven.py"
+   ]
+  },
+  {
+   "name": "Output cost reduction",
+   "steps": [
+    "Run output_audit.py and reasoning_audit.py to find tasks where output or reasoning dominates.",
+    "Set max_tokens near the 95th percentile and add stop sequences.",
+    "Switch file-editing tasks to diff-only replies applied by apply_edits.py.",
+    "Lower reasoning effort on flagged simple tasks.",
+    "Verify with eval_gate.py and watch the truncation rate for a week."
+   ],
+   "tools": [
+    "output_audit.py",
+    "reasoning_audit.py",
+    "apply_edits.py",
+    "eval_gate.py"
+   ]
+  },
+  {
+   "name": "Caching decision per prompt",
+   "steps": [
+    "Extract request timestamps and prefix size for each task from the usage log.",
+    "Run cache_breakeven.py with your provider's write and read multipliers and TTL.",
+    "Enable caching only where reads per write exceed break-even.",
+    "For bursty tasks, group requests in time so they fall inside the TTL.",
+    "Re-check the cache rate in the usage report."
+   ],
+   "tools": [
+    "cache_breakeven.py",
+    "cache_sim.py",
+    "usage_report.py"
+   ]
+  },
+  {
+   "name": "Long-document question answering without full load",
+   "steps": [
+    "Split the document into paragraphs with line numbers.",
+    "Select passages with bm25_select.py under a token budget.",
+    "Ask the cheap model, requiring a quoted supporting line or the reply 'not found'.",
+    "Check the quote exists in the source with code.",
+    "On 'not found' or a failed quote check, double the budget once, then escalate."
+   ],
+   "tools": [
+    "bm25_select.py",
+    "kb.py",
+    "cascade_sim.py"
+   ]
+  },
+  {
+   "name": "Long agent session hygiene",
+   "steps": [
+    "Compact tool output before it enters context.",
+    "At a set context size, run history_trim.py and compare the saving with the reported cache loss.",
+    "If trimming is not worth it, write a short handover note and start a fresh session.",
+    "Cap consecutive identical tool calls to stop loops.",
+    "Review retry_waste.py weekly for the worst sessions."
+   ],
+   "tools": [
+    "history_trim.py",
+    "compact.py",
+    "retry_waste.py",
+    "session_budget.py"
+   ]
+  },
+  {
+   "name": "Weekly waste review",
+   "steps": [
+    "Run the usage report to rank tasks by spend.",
+    "Run retry_waste.py, output_audit.py and reasoning_audit.py on the same log.",
+    "Pick the single largest item and apply one change.",
+    "Gate the change with eval_gate.py.",
+    "Record before and after cost per task; revert if quality or cost did not improve."
+   ],
+   "tools": [
+    "usage_report.py",
+    "retry_waste.py",
+    "output_audit.py",
+    "reasoning_audit.py",
+    "eval_gate.py"
+   ]
+  }
+ ]
+}

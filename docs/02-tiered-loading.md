@@ -24,7 +24,7 @@ The single cheapest instruction in this repository is one sentence in your proje
 Do NOT read the knowledge base for general questions (definitions, generic code, formatting).
 ```
 
-Without it, an agent with access to a knowledge base tends to consult it by default. With it, the common case costs nothing. Put it directly under the path of the knowledge base so it is read together with the path.
+Without it, an agent with access to a knowledge base tends to consult it by default. With it, the common case costs (almost) nothing. The risk to manage is UNDER-retrieval: the model answers from general knowledge when the project had a specific answer. Track it: when a person corrects an answer that the knowledge base would have fixed, count that as a miss, and widen the "when to read" rule if misses accumulate. Put it directly under the path of the knowledge base so it is read together with the path.
 
 ## 2.3 Never import big files eagerly
 
@@ -63,7 +63,7 @@ wiki/domains/seo.md        -> lists pages about SEO
 wiki/domains/support.md    -> lists pages about support
 ```
 
-The model reads the top index, picks a domain, reads that sub-index, then opens pages. Three small reads beat one large one.
+The model reads the top index, picks a domain, reads that sub-index, then opens pages. Three small reads often beat one large one, but not always: every read is a round trip that re-sends the context and adds latency. If a cached prefix makes one moderate read cheap, prefer one read. Measure both on your own questions.
 
 ## 2.7 Budgeting always-loaded files
 
@@ -73,7 +73,7 @@ Always-loaded files are the ones you pay for in every session. Put them under an
 python tools/budget.py examples/budget.json
 ```
 
-Exit code 2 means something is over budget, so the same command works in CI or a pre-commit hook. Suggested starting limits: guide 700 tokens, hot cache 250, total always-loaded 1,500. Adjust to your needs, but write the numbers down; a budget nobody wrote down is not a budget.
+Exit code 2 means something is over budget, so the same command works in CI or a pre-commit hook. Suggested starting limits: guide 700 tokens, hot cache 250, total always-loaded 1,500. These are arbitrary starting points, not findings: if a cached prefix makes the guide cheap per request, a longer guide can be the better trade. Set limits from your own bill (`usage_report.py`), write the numbers down, and revisit them quarterly; a budget nobody wrote down is not a budget. (The hot cache is "about a dozen lines" as a target; lint R8 allows up to 25 as a hard ceiling.)
 
 ## 2.8 Memory summaries and skill descriptions
 

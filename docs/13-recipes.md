@@ -25,8 +25,9 @@ Goal: cost proportional to change.
 ```bash
 #!/bin/bash
 cd ~/knowledge || exit 1
-n=$(python3 tools/kb.py status 2>/dev/null | wc -l)
-[ "$n" -eq 0 ] && exit 0          # nothing changed: spend nothing
+set -eo pipefail
+out=$(python3 tools/kb.py status 2>/dev/null) || { echo "status failed" >&2; exit 1; }
+[ -z "$out" ] && exit 0           # nothing changed: spend nothing (a failure above is NOT a quiet night)
 # start your agent here with the ingest skill and a narrow allow-list
 ```
 
@@ -107,3 +108,22 @@ Use your own numbers. If the best K is far below your actual turns per session, 
 3. `python tools/usage_report.py usage.jsonl`
 4. `python tools/budget.py budget.json`
 5. Apply P41, pick one change, write it down.
+
+## 13.11 Recipe: safely move a task to a cheaper model
+
+1. Collect 40 or more real inputs and a pass/fail check for each.
+2. Record pass/fail for the current model and the cheaper one in two JSONL files.
+3. `python workflows/safe_downgrade.py --baseline a.jsonl --candidate b.jsonl --prices prices.json --old big --new small --calls 10000 --input 1500 --output 300`
+4. Ship only on "pass". On "inconclusive", add cases and repeat.
+
+## 13.12 Recipe: plan a 10,000-item labelling job
+
+1. `python workflows/bulk_job_planner.py rows.jsonl --prices prices.json --rules rules.json`
+2. Run a 50-item pilot, gate it with `eval_gate.py`.
+3. Run the packed batches; retry failed IDs with `repair_plan.py`.
+
+## 13.13 Recipe: tame a long agent session
+
+1. `python workflows/session_hygiene.py history.jsonl`
+2. Trim stale tool outputs; keep the checkpoint file.
+3. Restart with P50 when the workflow says the hard limit is reached.

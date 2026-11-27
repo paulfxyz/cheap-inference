@@ -1,0 +1,194 @@
+{
+ "audit": {
+  "problems": [
+   {
+    "quote": "roughly three quarters of an English word",
+    "issue": "Used as the definition of a token. That is only a rough English-prose average; code, JSON, and non-Latin text are often far denser, so budgets set from this will be wrong.",
+    "fix": "Call it an English-prose ranking heuristic and require a provider tokenizer before any hard budget."
+   },
+   {
+    "quote": "One timestamp at the top of a prompt can zero your cache hit rate",
+    "issue": "Overstated. Automatic prefix caching is provider-specific, often has a minimum length and TTL, and some APIs cache only at explicit breakpoints. A leading timestamp does not always zero the discount, and a cache write can cost more than a miss.",
+    "fix": "Say it can invalidate an implicit prefix cache when that feature applies, and model cache-write fees separately."
+   },
+   {
+    "quote": "Loading cost: ~76,500 tokens/month",
+    "issue": "Treats always-loaded tokens as full-price input on every session. If the prefix is cached, marginal cost is much lower; if sessions do not actually load hot.md, the 255-token total is inflated.",
+    "fix": "Label it uncached worst case and multiply cached vs fresh shares by the user's price table."
+   },
+   {
+    "quote": "one long session : 1,371,000 input tokens",
+    "issue": "Does not follow from re-sending prior turns: 700*(60*61/2)=1,281,000. Three sessions of 20 are about 441,000, not 244,300, so the '82% fewer' worked example is not reproducible from the stated inputs.",
+    "fix": "Publish the exact formula or replace the numbers with ones the formula produces."
+   },
+   {
+    "quote": "A planted lie passes a model reviewer more often than you would think",
+    "issue": "The receipt only shows a non-verbatim quote fails a string check. A false sentence copied from a bad source passes; a true paraphrase fails. No evidence is given that models wave the planted line through.",
+    "fix": "Claim only 'verbatim quote mismatch is caught'; state cherry-picked and paraphrased claims are not."
+   },
+   {
+    "quote": "A model does not get bored, does not forget a cross-reference",
+    "issue": "False. Models drop links, invent pages, and skip contradictions, which is why the linter exists. This encourages unattended multi-file edits.",
+    "fix": "Say a model can attempt the upkeep; the manifest, diff, and lint are what keep it honest."
+   },
+   {
+    "quote": "0 cost on quiet nights",
+    "issue": "The guard avoids a model call only if it runs before the agent. status still walks the vault; a cron that starts the agent first still pays. 'Prints nothing' also disagrees with chapter 14's 'empty list'.",
+    "fix": "Claim 'no model call if the shell guard sees no pending files' and note status CPU cost."
+   },
+   {
+    "quote": "Compacting a log removes most of its characters without losing the failure",
+    "issue": "Head/tail compaction drops failures that sit in the middle. The sample keeps the error only because it is in the tail.",
+    "fix": "Always keep lines matching error/fail/exception, then head/tail the rest."
+   },
+   {
+    "quote": "The checks in this repo spend zero tokens",
+    "issue": "The tools do, but the recommended post-edit hook sends lint text back into the model, and chapter 4.6 adds HEAD requests. The grep receipt misses urllib. Link-rot on wiki URLs is an SSRF risk.",
+    "fix": "Limit the claim to tools/*.py model calls; warn that hooks spend tokens and URL fetches need an allow-list."
+   },
+   {
+    "quote": "Below roughly 50 to 100 sources a wiki is not worth building",
+    "issue": "Presented as a crossover with retrieval, with no measurement. Index fit, query repetition, and synthesis cost dominate, not source count.",
+    "fix": "Replace with a measured test: if the same facts are re-explained often and the index fits, build it; otherwise search."
+   }
+  ],
+  "keep": [
+   "Measure usage and always-loaded size before changing prompts.",
+   "Content-hash manifests so unchanged sources never trigger ingest.",
+   "Deterministic quote, link, and budget checks instead of model self-review.",
+   "Stable prefix first, volatile text last, when the provider actually prefix-caches.",
+   "Cheap-first routing that yields to an explicit quality or model request."
+  ]
+ },
+ "techniques": [
+  {
+   "name": "reasoning-effort gate",
+   "saves": "Thinking tokens often dwarf visible output; skipping extended reasoning on easy calls is a large cut.",
+   "risk": "Hard multi-step and math tasks get shallow, wrong answers.",
+   "tool": {
+    "filename": "think_gate.py",
+    "algorithm": "Input: task text plus a flag if tools or citations are required. Score length, digit density, and markers like prove/compare/debug. Output JSON {effort: none|low|high}. Default none unless score>=2 or the user named quality."
+   }
+  },
+  {
+   "name": "extractive query prune",
+   "saves": "Sends a few overlapping windows instead of a whole file, cutting input on doc QA.",
+   "risk": "Answer lives outside the lexical window; names and paraphrases are missed.",
+   "tool": {
+    "filename": "prune.py",
+    "algorithm": "Input: query and a text file. Split on blank lines, score windows by shared lowercase tokens, take top 3 with one neighbour. Output those slices plus byte offsets. No model."
+   }
+  },
+  {
+   "name": "history tool-result strip",
+   "saves": "Repeated tool dumps dominate multi-turn input; keep the last result and a one-line status for older ones.",
+   "risk": "A later turn needed an earlier full payload.",
+   "tool": {
+    "filename": "hist_strip.py",
+    "algorithm": "Input: JSONL turns. For each tool-result role, if an identical tool id appears later, replace body with '[prior result omitted, N chars]'. Output JSONL and chars saved. Never touch the last user turn."
+   }
+  },
+  {
+   "name": "near-duplicate query cache",
+   "saves": "Exact caches miss rephrasings; a shingle hit avoids a second generation.",
+   "risk": "Similar wording, different entity or date, returns the wrong stored answer.",
+   "tool": {
+    "filename": "qcache.py",
+    "algorithm": "Input: query plus optional store. 5-shingle Jaccard against cached keys. If max>=0.9 and model/prompt version match, print the stored answer; else exit 1. Store with sha256 of model+version+query."
+   }
+  },
+  {
+   "name": "markdown diet",
+   "saves": "Badges, HTML comments, and base64 images are huge and rarely affect the answer.",
+   "risk": "The question was about a figure or a commented-out spec.",
+   "tool": {
+    "filename": "md_diet.py",
+    "algorithm": "Input: markdown path. Drop HTML comments, badge image links, and data: URIs; collapse blank lines. Output diet.md plus a JSON report of bytes removed by class. Do not touch fenced code."
+   }
+  },
+  {
+   "name": "prefix canonicalizer",
+   "saves": "Unstable key order and tool order shatter prefix caches across calls that are otherwise identical.",
+   "risk": "A downstream parser depended on original order.",
+   "tool": {
+    "filename": "canon.py",
+    "algorithm": "Input: JSON request. Sort object keys, sort tool definitions by name, move a date/id field to a trailing 'volatile' object. Output canonical JSON and a hash of the stable prefix only."
+   }
+  },
+  {
+   "name": "retry preflight",
+   "saves": "Schema and length failures cause full-price retries; catch them before the call.",
+   "risk": "Over-strict local rules reject outputs the API would have accepted.",
+   "tool": {
+    "filename": "preflight.py",
+    "algorithm": "Input: draft output, max tokens, required keys. Reject if estimated tokens exceed max, JSON does not parse, or required keys are missing. Output {ok, reason}. Exit 2 on fail so a script can fix without a model."
+   }
+  },
+  {
+   "name": "flex-tier picker",
+   "saves": "Latency-tolerant jobs can use flex/batch discounts beyond a single batch flag.",
+   "risk": "Using flex for a waiting user, or a tier that drops quality/SLA.",
+   "tool": {
+    "filename": "tier_pick.py",
+    "algorithm": "Input: prices JSON, deadline seconds, interactive bool. If interactive or deadline<60, pick standard; elif deadline>3600 pick batch; else flex. Output route name and estimated USD. Never call a network."
+   }
+  }
+ ],
+ "workflows": [
+  {
+   "name": "cascade with accept gate",
+   "steps": [
+    "Run preflight constraints locally.",
+    "Call the smallest model with think_gate effort none.",
+    "Accept only if qcache miss was real and a deterministic check passes.",
+    "Else one higher rung, never skipping the user's named model."
+   ],
+   "tools": [
+    "think_gate.py",
+    "preflight.py",
+    "qcache.py"
+   ]
+  },
+  {
+   "name": "doc QA without the whole file",
+   "steps": [
+    "md_diet the source.",
+    "prune.py to the query.",
+    "Answer from slices only; if the model says not-in-context, widen once.",
+    "Store the accepted answer in qcache.py."
+   ],
+   "tools": [
+    "md_diet.py",
+    "prune.py",
+    "qcache.py"
+   ]
+  },
+  {
+   "name": "long agent thread diet",
+   "steps": [
+    "hist_strip.py before each new turn.",
+    "canon.py the stable system and tool block.",
+    "session_budget.py only after strip, so the split decision is not based on duplicate tool dumps."
+   ],
+   "tools": [
+    "hist_strip.py",
+    "canon.py",
+    "session_budget.py"
+   ]
+  },
+  {
+   "name": "overnight price lane",
+   "steps": [
+    "Reject the job if a human is waiting.",
+    "canon.py so the batch shares one prefix.",
+    "tier_pick.py batch or flex.",
+    "Validate with preflight.py; requeue failures only."
+   ],
+   "tools": [
+    "canon.py",
+    "tier_pick.py",
+    "preflight.py"
+   ]
+  }
+ ]
+}

@@ -24,16 +24,16 @@ PAD = 12       # horizontal padding inside each half
 
 # (file name, label, message, message colour)
 BADGES = [
-    ("tests", "tests", "30 in CI", OR),
+    ("tests", "tests", "89 in CI", OR),
     ("licence", "licence", "MIT", DK),
-    ("version", "version", "2.0.0", DK),
+    ("version", "version", "2.1.0", DK),
     ("python", "python", "3.10+", OR),
     ("dependencies", "dependencies", "0", DK),
     ("tokens", "tokens spent on checks", "0", OR),
-    ("tools", "tools", "13", DK),
-    ("prompts", "prompts", "42", OR),
-    ("tips", "tips", "100", DK),
-    ("release", "release", "v2.0.0", OR),
+    ("tools", "tools", "34", DK),
+    ("prompts", "prompts", "54", OR),
+    ("tips", "tips", "154", DK),
+    ("release", "release", "v2.1.0", OR),
     ("star", "github", "star it", DK),
 ]
 

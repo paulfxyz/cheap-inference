@@ -31,6 +31,12 @@ The main thread sees 40 short summaries instead of 40 documents. The documents l
 
 After the workers finish, check the result in a separate context with one question: does every statement follow from its source? A fresh context has not seen the reasoning that produced the claims, so it does not inherit the same blind spots. Pair it with the deterministic quote check from chapter 4: the script catches fabricated quotes, the verifier catches claims that misread a real quote.
 
+## 7.4b Honest caveats
+
+- **Summaries are lossy.** One claim per source drops most of the content, and a verifier that sees only summaries cannot recover a qualification the summary omitted. For high-stakes work let the verifier open the original passage for each claim.
+- **A fresh context removes anchoring, not model bias.** If the verifier is the same model as the workers it shares its blind spots; use a different model for important checks.
+- **Workers have overhead.** Each pays for the system prompt and tool schemas, and 40 simultaneous workers can all miss a cache that one warm-up would have filled (see `tools/wave_plan.py`).
+
 ## 7.5 When not to fan out
 
 - Fewer than about five items: do it inline.

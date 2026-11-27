@@ -16,8 +16,8 @@
 <g font-family="ui-monospace,Menlo,Consolas,monospace" fill="#F4EDE4">
 <text x="60" y="110" font-size="54" font-weight="700" font-family="Georgia,serif">cheap-inference</text>
 <text x="60" y="158" font-size="22" fill="#DA552F" class="glow">Pay for the tokens that change the answer.</text>
-<text x="60" y="215" font-size="16" opacity=".8">0 tokens spent on checks · 0 dependencies · 100 tips</text>
-<text x="60" y="242" font-size="16" opacity=".8">42 prompts · 14 chapters · 13 tools</text>
+<text x="60" y="215" font-size="16" opacity=".8">0 tokens spent on checks · 0 dependencies · 154 tips</text>
+<text x="60" y="242" font-size="16" opacity=".8">54 prompts · 17 chapters · 34 tools · 8 workflows</text>
 <rect x="60" y="285" width="220" height="44" rx="22" fill="#DA552F"/><text x="170" y="313" font-size="17" text-anchor="middle" fill="#1D1814" font-weight="700">stdlib-only Python</text>
 <rect x="296" y="285" width="120" height="44" rx="22" fill="none" stroke="#DA552F" stroke-width="2"/><text x="356" y="313" font-size="17" text-anchor="middle">MIT</text>
 </g>

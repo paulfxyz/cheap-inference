@@ -15,6 +15,12 @@
 | 4 | Fan-out or deep research | Many entities or many sources, with citations |
 | 5 | Premium model, high effort | You asked for top quality, a lower rung failed, or the stakes are high |
 
+## 6.1b What the ladder is NOT
+
+The ladder mixes two separate axes: orchestration depth (tools, agents, fan-out) and model tier. A premium model with no tools can be cheaper than a cheap model running a long agent loop, so rung numbers are not a strict cost order. Treat the rungs as a vocabulary for "how much machinery", and decide the model tier separately (with `cascade.py`, `eval_gate.py` and `costcalc.py`).
+
+Escalation is also not free: each failed rung is paid for, plus the time to detect the failure. For tasks that usually fail on a low rung, starting higher is cheaper. `router.py` and `ladder_log.py` exist to learn that from data instead of guessing.
+
 ## 6.2 The rule of thumb
 
 If you cannot say why the current rung failed, do not climb. "It might be better" is not a reason. "The answer was shallow and missed X" is.
@@ -55,7 +61,7 @@ $ python tools/router.py "look up the price" --items 120
 rung 4: single lookup; 120 items => fan-out
 ```
 
-It costs zero tokens and is meant as a template for your own policy. Edit the `RULES` list.
+It costs zero tokens and is meant as a template for your own policy. Edit the `RULES` list. It is deliberately simple and therefore brittle: a hard question without trigger words routes to rung 0, and trigger words in an easy question over-escalate. Treat its output as a suggestion, log what actually worked with `ladder_log.py`, and let `should_probe` re-test a lower rung every N runs so a lucky streak cannot lock a task onto the wrong floor.
 
 ## 6.7 Effort and model overrides
 

@@ -4,29 +4,29 @@
 
 <br>
 
-# cheap-inference <sub>2.0.0</sub>
+# cheap-inference <sub>2.1.0</sub>
 
 ### Pay for the tokens that change the answer.
 
-A tested, zero-dependency Python toolkit and a 14-chapter field guide for cutting what you spend on language models. Load less. Redo less. Check with code. Route cheap first. Fan out with summaries.
+A tested, zero-dependency Python toolkit (34 tools, 8 workflows) and a 17-chapter field guide, reviewed by four frontier models, for cutting what you spend on language models. Load less. Redo less. Check with code. Route cheap first. Fan out with summaries.
 
 <br>
 
-<a href="https://github.com/paulfxyz/cheap-inference/actions/workflows/ci.yml"><img src="docs/images/badges/tests.svg" alt="30 tests, run in CI"></a>
+<a href="https://github.com/paulfxyz/cheap-inference/actions/workflows/ci.yml"><img src="docs/images/badges/tests.svg" alt="89 tests, run in CI"></a>
 <a href="LICENSE"><img src="docs/images/badges/licence.svg" alt="Licence: MIT"></a>
-<img src="docs/images/badges/version.svg" alt="Version 2.0.0">
+<img src="docs/images/badges/version.svg" alt="Version 2.1.0">
 <img src="docs/images/badges/python.svg" alt="Python 3.10+">
 <img src="docs/images/badges/dependencies.svg" alt="Dependencies: 0">
 <img src="docs/images/badges/tokens.svg" alt="Tokens spent on checks: 0">
-<img src="docs/images/badges/tools.svg" alt="13 tools">
-<img src="docs/images/badges/prompts.svg" alt="42 prompts">
-<img src="docs/images/badges/tips.svg" alt="100 tips">
-<a href="https://github.com/paulfxyz/cheap-inference/releases/tag/v2.0.0"><img src="docs/images/badges/release.svg" alt="Release v2.0.0"></a>
+<img src="docs/images/badges/tools.svg" alt="34 tools">
+<img src="docs/images/badges/prompts.svg" alt="54 prompts">
+<img src="docs/images/badges/tips.svg" alt="154 tips">
+<a href="https://github.com/paulfxyz/cheap-inference/releases/tag/v2.1.0"><img src="docs/images/badges/release.svg" alt="Release v2.1.0"></a>
 <a href="https://github.com/paulfxyz/cheap-inference/stargazers"><img src="docs/images/badges/star.svg" alt="Star on GitHub"></a>
 
 <br><br>
 
-[**Quick start**](#quick-start) &nbsp;·&nbsp; [**The five levers**](#the-five-levers) &nbsp;·&nbsp; [**Tools**](#the-tools) &nbsp;·&nbsp; [**Field guide**](#the-field-guide) &nbsp;·&nbsp; [**Prompts**](docs/11-prompt-library.md) &nbsp;·&nbsp; [**100 tips**](docs/12-tips-and-tweaks.md) &nbsp;·&nbsp; [**Receipts**](docs/14-claims-and-receipts.md)
+[**Quick start**](#quick-start) &nbsp;·&nbsp; [**The five levers**](#the-five-levers) &nbsp;·&nbsp; [**Tools**](#the-tools) &nbsp;·&nbsp; [**Field guide**](#the-field-guide) &nbsp;·&nbsp; [**Prompts**](docs/11-prompt-library.md) &nbsp;·&nbsp; [**154 tips**](docs/12-tips-and-tweaks.md) &nbsp;·&nbsp; [**Workflows**](docs/17-workflows.md) &nbsp;·&nbsp; [**Review**](docs/15-multi-model-review.md) &nbsp;·&nbsp; [**Receipts**](docs/14-claims-and-receipts.md)
 
 </div>
 
@@ -51,9 +51,9 @@ Every claim below has a command that checks it. Run them. If one fails for you, 
 <td width="33%" valign="top">
 
 ### 0 tokens
-The linter, budget checker, deduplicator, router, log compactor and cache simulator never call a model.
+The 34 tools never call a model or the network, so every check is free. Repairing what a check finds still costs what it costs.
 
-<sub>Receipt: read `tools/`. No network code.</sub>
+<sub>Receipt: `python -m unittest tests.test_tools.NoNetworkTests` fails on any network import.</sub>
 
 </td>
 <td width="33%" valign="top">
@@ -220,7 +220,7 @@ Forty documents in the main thread are paid for on every later turn. Forty worke
 
 ## The tools
 
-Thirteen single-file tools in [`tools/`](tools/). Standard library only. Every function documented. Every tool has tests.
+Thirty-four single-file tools in [`tools/`](tools/). Standard library only. Every function documented. Every tool has tests. The first 13 are the foundation; the 21 marked new in 2.1.0 come from a [four-model review](docs/15-multi-model-review.md) and are explained in [chapter 16](docs/16-advanced-techniques.md).
 
 | Tool | What it does for you | Tokens |
 | --- | --- | :-: |
@@ -237,6 +237,27 @@ Thirteen single-file tools in [`tools/`](tools/). Standard library only. Every f
 | [`compact.py`](tools/compact.py) | Shrinks logs and tool output before they enter a context | 0 |
 | [`chunker.py`](tools/chunker.py) | Splits giant Markdown into small linked pages ready for the wiki | 0 |
 | [`dedup.py`](tools/dedup.py) | Near-duplicate page finder with shingles and Jaccard similarity | 0 |
+| [`schema_diet.py`](tools/schema_diet.py) | **New.** Weighs tool and function schemas sent on every request; flags tools never called | 0 |
+| [`payload_compact.py`](tools/payload_compact.py) | **New.** Compares JSON against delimited rows for a list of records | 0 |
+| [`fewshot_prune.py`](tools/fewshot_prune.py) | **New.** Keeps the fewest few-shot examples with the same coverage | 0 |
+| [`history_trim.py`](tools/history_trim.py) | **New.** Stubs stale tool outputs in a chat history and writes a checkpoint | 0 |
+| [`token_calibrate.py`](tools/token_calibrate.py) | **New.** Measures chars per token by content kind on your own data | 0 |
+| [`prefilter.py`](tools/prefilter.py) | **New.** Collapses duplicates and applies free rules before a bulk job | 0 |
+| [`cascade.py`](tools/cascade.py) | **New.** Break-even acceptance rate for cheap-first with a validator | 0 |
+| [`topk.py`](tools/topk.py) | **New.** BM25 passage selection under a token budget | 0 |
+| [`batch_pack.py`](tools/batch_pack.py) | **New.** Micro-batches with IDs and a partial-retry plan | 0 |
+| [`repair_plan.py`](tools/repair_plan.py) | **New.** Re-asks only the invalid fields, then merges | 0 |
+| [`response_cache.py`](tools/response_cache.py) | **New.** Exact-match answer cache with TTL and atomic writes | 0 |
+| [`singleflight.py`](tools/singleflight.py) | **New.** Identical in-flight requests share one call; debounce helper | 0 |
+| [`cache_breakeven.py`](tools/cache_breakeven.py) | **New.** Reuses needed before caching pays, given write premium and minimum prefix | 0 |
+| [`wave_plan.py`](tools/wave_plan.py) | **New.** One warm-up request, then waves inside the cache lifetime | 0 |
+| [`output_audit.py`](tools/output_audit.py) | **New.** Ranks output and reasoning tokens; flags requests that hit the cap | 0 |
+| [`waste_finder.py`](tools/waste_finder.py) | **New.** Finds retries, loops and repeated requests in a log | 0 |
+| [`preflight.py`](tools/preflight.py) | **New.** Catches doomed requests before they are billed | 0 |
+| [`wiki_roi.py`](tools/wiki_roi.py) | **New.** Break-even for building a wiki from your own numbers | 0 |
+| [`edit_guard.py`](tools/edit_guard.py) | **New.** Applies SEARCH/REPLACE patches all-or-nothing | 0 |
+| [`eval_gate.py`](tools/eval_gate.py) | **New.** Quality gate with Wilson confidence intervals for any cost change | 0 |
+| [`lane_picker.py`](tools/lane_picker.py) | **New.** Cheapest service lane that meets a deadline | 0 |
 
 <br>
 
@@ -290,7 +311,7 @@ warn: slow
 error: boom
 ```
 
-**`session_budget.py`** models when a fresh session beats a long one (worst case, ignores caching).
+**`session_budget.py`** models when a fresh session beats a long one (the default is the worst case; add `--cached-share` and `--cache-price` to include caching, which makes the saving much smaller).
 
 ```
 $ python tools/session_budget.py --turns 60 --per-turn 700
@@ -301,6 +322,27 @@ best split (K=3) : 244,300 input tokens  (82% fewer)
 Every tool file opens with a plain-language explanation of why it exists, a worked example and the exit codes it uses, and every function has comments on the reasoning, not just the mechanics.
 
 </details>
+
+## Workflows
+
+Eight routines in [`workflows/`](workflows/) chain the tools for real situations. Each prints a Markdown report and calls no model. Details in [chapter 17](docs/17-workflows.md).
+
+| Workflow | Use it when | Command |
+| --- | --- | --- |
+| [`weekly_audit.py`](workflows/weekly_audit.py) | Weekly 20-minute cost review | `python workflows/weekly_audit.py --log usage.jsonl --kb wiki` |
+| [`safe_downgrade.py`](workflows/safe_downgrade.py) | Moving a task to a cheaper model | `python workflows/safe_downgrade.py --baseline a.jsonl --candidate b.jsonl ...` |
+| [`bulk_job_planner.py`](workflows/bulk_job_planner.py) | Thousands of items for a model | `python workflows/bulk_job_planner.py rows.jsonl --prices prices.json` |
+| [`session_hygiene.py`](workflows/session_hygiene.py) | A long agent session is heavy | `python workflows/session_hygiene.py history.jsonl` |
+| [`context_diet.py`](workflows/context_diet.py) | The per-request baseline feels big | `python workflows/context_diet.py --guide AGENTS.md --tools tools.json` |
+| [`long_doc_qa.py`](workflows/long_doc_qa.py) | One question about a long document | `python workflows/long_doc_qa.py doc.md "question"` |
+| [`repair_failed_fields.py`](workflows/repair_failed_fields.py) | Some model-filled fields are invalid | `python workflows/repair_failed_fields.py records.json schema.json` |
+| [`cache_decision.py`](workflows/cache_decision.py) | Should this prefix be cached and warmed | `python workflows/cache_decision.py --prefix p.txt --requests 40` |
+
+Two GitHub Actions ship with them: `cost-gate.yml` blocks pull requests that bloat always-loaded files or break the knowledge base, and `weekly-audit.yml` runs the audit every Monday.
+
+## Reviewed by four frontier models
+
+Version 2.1.0 started with an audit. The whole 2.0.0 repository was sent through OpenRouter to Claude Fable 5.2, Gemini 4 Neon and GPT 6.2 Astra, with Grok 4.7 as a fourth opinion. They returned 61 findings and 39 technique ideas. We verified each, fixed what held up, and declined what did not. The biggest corrections: prompt-cache writes can cost more than plain input, the old "50 to 100 sources" wiki threshold was arbitrary, the quote check proves a string exists and not that a claim is supported, and `chars / 4` under-counts code. Method, consensus table and every raw answer: [chapter 15](docs/15-multi-model-review.md) and [`docs/reviews/`](docs/reviews/).
 
 ## The field guide
 
@@ -316,10 +358,13 @@ Every tool file opens with a plain-language explanation of why it exists, a work
 | 8 | [Caching, ordering, batching](docs/08-caching-and-batching.md) | Prefix caching, prompt order, local result cache |
 | 9 | [Failure modes](docs/09-failure-modes.md) | Dead zone, scale, over-pruning, security |
 | 10 | [Checklist](docs/10-checklist.md) | Ten-minute, one-hour and weekly wins, red flags, glossary |
-| 11 | [Prompt library](docs/11-prompt-library.md) | **42 copy-paste prompts** for setup, ingest, query, review, routing, fan-out, output shaping |
-| 12 | [Tips and tweaks](docs/12-tips-and-tweaks.md) | **100 small changes**, each cheap to try and easy to undo |
-| 13 | [Recipes](docs/13-recipes.md) | Ten end-to-end workflows combining the tools |
+| 11 | [Prompt library](docs/11-prompt-library.md) | **54 copy-paste prompts** for setup, ingest, query, review, routing, fan-out, output shaping |
+| 12 | [Tips and tweaks](docs/12-tips-and-tweaks.md) | **154 small changes**, each cheap to try and easy to undo |
+| 13 | [Recipes](docs/13-recipes.md) | Thirteen end-to-end recipes combining the tools |
 | 14 | [Claims and receipts](docs/14-claims-and-receipts.md) | Every bold claim with the command that checks it, and what we do not claim |
+| 15 | [Multi-model review](docs/15-multi-model-review.md) | What four frontier models found, what we accepted and what we declined |
+| 16 | [Advanced techniques](docs/16-advanced-techniques.md) | The 21 new tools: problem, method, risk, command |
+| 17 | [Workflows](docs/17-workflows.md) | Eight chained routines and two GitHub Actions |
 
 <br>
 
@@ -362,7 +407,7 @@ Start at [chapter 1](docs/01-why-context-costs.md), end at [chapter 9](docs/09-f
 
 ## Social kit
 
-Everything used to announce 2.0.0, in [`social-kit/`](social-kit/): copy for [X](social-kit/x-thread.md), [LinkedIn](social-kit/linkedin.md) and [Product Hunt](social-kit/producthunt/producthunt.md), plus a cover video, gallery images and five animated icons. Reuse it for your own posts about the repo.
+Everything used to announce 2.0.0 (not re-rendered for 2.1.0), in [`social-kit/`](social-kit/): copy for [X](social-kit/x-thread.md), [LinkedIn](social-kit/linkedin.md) and [Product Hunt](social-kit/producthunt/producthunt.md), plus a cover video, gallery images and five animated icons. Reuse it for your own posts about the repo.
 
 <div align="center">
 
@@ -429,23 +474,24 @@ Everything used to announce 2.0.0, in [`social-kit/`](social-kit/): copy for [X]
 ```
 cheap-inference/
 ├── README.md, CHANGELOG.md, VERSION
-├── docs/            14 chapters + animated and static SVG illustrations (docs/images/)
-├── tools/           13 stdlib-only Python tools
+├── docs/            17 chapters (+ docs/reviews: raw model audits) + animated and static SVG illustrations (docs/images/)
+├── tools/           34 stdlib-only Python tools
+├── workflows/       8 chained routines
 ├── social-kit/      announcement copy, cover video, gallery, animated icons
 ├── templates/       AGENTS.md, hot.md, ingest skill, post-edit and session-start hooks
-├── examples/        sample-kb (clean), broken-kb (every error), budget and price tables
-├── tests/           30 unit tests
-└── .github/         CI on Python 3.10 and 3.12
+├── examples/        sample-kb (clean), broken-kb (every error), budget, price, log and lane samples
+├── tests/           89 unit and smoke tests
+└── .github/         CI on Python 3.10 and 3.12, cost gate, weekly audit
 ```
 
 <br>
 
 ## Honest limits
 
-- Token counts are estimates (characters / 4, words x 1.33). Use your provider's counter for exact numbers.
+- Token counts are estimates (per-kind ratios, characters / 4 for prose). Use your provider's counter, or calibrate with `token_calibrate.py`.
 - No real prices are shipped. `examples/prices.example.json` holds placeholders; fill in your own.
 - The linter checks structure and quotes, not truth. A wrong source makes a faithfully wrong wiki.
-- Below roughly 50 to 100 sources a wiki is not worth building. Chapter 9 lists where else this breaks.
+- Whether a wiki pays off depends on your numbers: compute it with `wiki_roi.py`. Chapter 9 lists where else this breaks.
 - We do not promise a percentage saving. Measure yours with `usage_report.py` before and after.
 
 ## FAQ
@@ -465,7 +511,7 @@ It can, if you trim blindly. The rules are built to cut waste, not substance: tr
 <details>
 <summary><strong>Why not just use retrieval?</strong></summary>
 <br>
-Retrieval rediscovers knowledge on every question. A maintained wiki pays for synthesis once, at ingest. Below roughly 50 to 100 sources, retrieval wins; the guide explains the crossover.
+Retrieval rediscovers knowledge on every question. A maintained wiki pays for synthesis once, at ingest. For few sources or few questions retrieval wins; `wiki_roi.py` computes the crossover from your own numbers.
 </details>
 
 <details>

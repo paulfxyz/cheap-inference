@@ -61,3 +61,12 @@ Copy this into your own notes. Items are ordered from cheapest-to-do and highest
 | Fan-out | Splitting work across parallel workers |
 | Rung | A step on the cheap-first ladder |
 | Dead zone | The corpus size at which a wiki is not yet worth building |
+
+## Added in 2.1.0
+
+- [ ] Tool schemas weighed (`schema_diet.py`) and unused ones removed or loaded on demand.
+- [ ] Cache break-even computed with the provider's write premium and minimum prefix.
+- [ ] Every cost change passed `eval_gate.py`, not just a spot check.
+- [ ] Output and reasoning tokens audited this week.
+- [ ] Bulk jobs prefiltered, packed in micro-batches, and repaired field by field.
+- [ ] Unattended scripts use `set -eo pipefail` and stage only the folders they own.

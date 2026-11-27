@@ -1,0 +1,1 @@
+{"lanes":[{"name":"realtime","price_multiplier":1.0,"max_latency_minutes":0.1},{"name":"standard","price_multiplier":0.8,"max_latency_minutes":5},{"name":"batch","price_multiplier":0.5,"max_latency_minutes":1440}]}
